@@ -101,16 +101,8 @@ let with_conn f =
   Lwt_preemptive.detach ConnectionPool.with_conn f
 
 (* Escape a string for SQL query *)
-let escape s =
-  let b = Buffer.create (String.length s) in
-  String.iter 
-    (function
-         '\\' -> Buffer.add_string b "\\\\"
-       | '\'' -> Buffer.add_string b "''"
-       | '"' -> Buffer.add_string b "\""
-       | c -> Buffer.add_char b c) s;
-  Buffer.contents b
-    
+let escape ~(conn:connection) s = conn#escape_string s
+
 let todos_user_login_join = "FROM nw.todos LEFT OUTER JOIN nw.users ON nw.todos.user_id = nw.users.id"
 
 (* Use this tuple format when querying TODOs to be parsed by
@@ -219,8 +211,8 @@ let update_todo_activation_date ~conn todo_id new_date =
 
 
 let update_todo_descr ~conn todo_id new_descr =
-  let sql = 
-    "UPDATE nw.todos SET descr = '"^escape new_descr^"' WHERE id = "^
+  let sql =
+    "UPDATE nw.todos SET descr = '"^escape ~conn new_descr^"' WHERE id = "^
       (string_of_int todo_id) in
   ignore (guarded_exec ~conn sql)
 
@@ -279,8 +271,8 @@ let query_upcoming_todos ~conn ~current_user_id date_criterion =
 let new_todo ~conn page_id user_id descr =
   (* TODO: could wrap this into BEGIN .. COMMIT if I knew how to
      return the data from the query! *)
-  let sql = 
-    "INSERT INTO nw.todos(user_id,descr) values('"^(string_of_int user_id)^"','"^escape descr^"'); 
+  let sql =
+    "INSERT INTO nw.todos(user_id,descr) values('"^(string_of_int user_id)^"','"^escape ~conn descr^"');
  INSERT INTO nw.todos_in_pages(todo_id,page_id) values(CURRVAL('nw.todos_id_seq'), "
     ^string_of_int page_id^");"^
       (insert_todo_activity ~user_id
@@ -410,8 +402,8 @@ let down_task_priority id =
   offset_task_priority id 1
 
 let new_wiki_page ~conn ~user_id page =
-  let sql = 
-    "INSERT INTO nw.pages (page_descr) VALUES ('"^escape page^"');
+  let sql =
+    "INSERT INTO nw.pages (page_descr) VALUES ('"^escape ~conn page^"');
      INSERT INTO nw.wikitext (page_id,page_created_by_user_id,page_text)
              VALUES ((SELECT CURRVAL('nw.pages_id_seq')), 
                       "^string_of_int user_id^", ''); "^
@@ -424,7 +416,7 @@ let new_wiki_page ~conn ~user_id page =
 let save_wiki_page ~conn page_id ~user_id lines =
   let page_id_s = string_of_int page_id in
   let user_id_s = string_of_int user_id in
-  let escaped = escape (String.concat "\n" lines) in
+  let escaped = escape ~conn (String.concat "\n" lines) in
   (* Ensure no one else can update the head revision while we're
      modifying it Selecting for UPDATE means no one else can SELECT FOR
      UPDATE this row.  If value (head_revision+1) is only computed and used
@@ -458,8 +450,8 @@ COMMIT" in
   ignore (guarded_exec ~conn sql)
 
 let find_page_id ~conn descr =
-  let sql = 
-    "SELECT id FROM nw.pages WHERE page_descr = '"^escape descr^"' LIMIT 1" in
+  let sql =
+    "SELECT id FROM nw.pages WHERE page_descr = '"^escape ~conn descr^"' LIMIT 1" in
   let r = guarded_exec ~conn sql in
   if r#ntuples = 0 then None else Some (int_of_string (r#get_tuple 0).(0))
 
@@ -549,8 +541,8 @@ let query_past_activity ~conn ~min_id ~max_id =
 
 (* Search features *)
 let search_wikipage ~conn str =
-  let escaped_ss = escape str in
-  let sql = 
+  let escaped_ss = escape ~conn str in
+  let sql =
     "SELECT page_id,headline,page_descr FROM nw.findwikipage('"^escaped_ss^"') "^
       "LEFT OUTER JOIN nw.pages on page_id = nw.pages.id ORDER BY rank DESC" in
   let r = guarded_exec ~conn sql in
@@ -585,8 +577,8 @@ let query_users ~conn =
 
 
 let query_user ~conn username =
-  let sql = 
-    user_query_string ^" WHERE login = '"^escape username^"' LIMIT 1" in
+  let sql =
+    user_query_string ^" WHERE login = '"^escape ~conn username^"' LIMIT 1" in
   let r = guarded_exec ~conn sql in
   if r#ntuples = 0 then 
     None 
@@ -596,8 +588,8 @@ let query_user ~conn username =
 let add_user ~conn ~login ~passwd ~real_name ~email =
   let sql =
     "INSERT INTO nw.users (login,passwd,real_name,email) "^
-      "VALUES ("^(String.concat "," 
-                    (List.map (fun s -> "'"^escape s^"'")
+      "VALUES ("^(String.concat ","
+                    (List.map (fun s -> "'"^escape ~conn s^"'")
                        [login; passwd; real_name; email]))^")" in
   ignore (guarded_exec ~conn sql)
 
@@ -606,9 +598,9 @@ let update_user ~conn~user_id ~passwd ~real_name ~email =
     "UPDATE nw.users SET "^
       (match passwd with
          None -> ""
-       | Some passwd -> "passwd = '"^escape passwd^"',")^
-      "real_name = '"^escape real_name^"',
-          email = '"^escape email^"' 
+       | Some passwd -> "passwd = '"^escape ~conn passwd^"',")^
+      "real_name = '"^escape ~conn real_name^"',
+          email = '"^escape ~conn email^"'
        WHERE id = "^(string_of_int user_id) in
   ignore (guarded_exec ~conn sql)
 
