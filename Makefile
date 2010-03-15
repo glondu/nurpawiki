@@ -46,4 +46,4 @@ clean:
 	-rm -Rf _build META version.ml
 
 install:
-	ocamlfind install nurpawiki META $(foreach T,$(TARGETS),_build/$(T))
+	ocamlfind install nurpawiki META $(foreach T,$(TARGETS),_build/$(T) $(if $(findstring .cmxa,$(T)),_build/$(T:.cmxa=.a)))
