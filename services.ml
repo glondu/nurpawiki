@@ -32,7 +32,7 @@ let wiki_view_page =
                         ** (opt (bool "force_login"))) ()
 
 let wiki_start = Eliom_predefmod.String_redirection.register_new_service [] unit
-  (fun sp _ _ -> return (make_full_uri wiki_view_page sp (Config.site.cfg_homepage, (None, (None, None)))))
+  (fun sp _ _ -> return (make_uri ~absolute:true ~service:wiki_view_page ~sp (Config.site.cfg_homepage, (None, (None, None)))))
 
 let wiki_edit_page = new_service ["edit"] (string "p") ()
 

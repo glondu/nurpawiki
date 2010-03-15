@@ -238,10 +238,10 @@ let rec render_todo_editor sp ~conn ~cur_user (src_page_cont, todos_to_edit) =
          (tr (th [pcdata "ID"]) 
             [th [pcdata "Description"]; th [pcdata "Activates on"]])
          (f.it
-            (fun (tv_id,(tv_act_date,(tv_descr,tv_owner_id))) todo ->
+            (fun (tv_id,(tv_act_date,(tv_descr,tv_owner_id))) todo accu ->
                let pri_style = 
                  Html_util.priority_css_class todo.t_priority in
-               [tr ~a:[a_class [pri_style]]
+               (tr ~a:[a_class [pri_style]]
                   (td [pcdata (string_of_int todo.t_id)])
                   [td (todo_descr tv_descr todo.t_descr :: 
                          wiki_page_links sp todo_in_pages todo);
@@ -253,7 +253,7 @@ let rec render_todo_editor sp ~conn ~cur_user (src_page_cont, todos_to_edit) =
                       button ~a:[a_id ("cal_button_"^(string_of_int todo.t_id))]
                         ~button_type:`Button [pcdata "..."]];
                    td [owner_selection tv_owner_id todo;
-                       int_input ~name:tv_id ~input_type:`Hidden ~value:todo.t_id ()]]])
+                       int_input ~name:tv_id ~input_type:`Hidden ~value:todo.t_id ()]])::accu)
             todos
             [tr (td [string_input ~input_type:`Submit ~value:"Save" ();
                      cancel_page src_page_cont]) []])] in

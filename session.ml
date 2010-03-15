@@ -204,13 +204,13 @@ let action_with_user_login sp f =
                   if passwd_md5 = user.user_passwd then
                     f user
                   else
-                    return []
+                    return ()
               | None ->
-                  return []
+                  return ()
           end
-      | None -> return []
+      | None -> return ()
  else
-   return []
+   return ()
 
 
 let update_session_password sp login new_password =
@@ -223,30 +223,28 @@ let update_session_password sp login new_password =
    actions were called, some of them might've set values into session
    that we want to use for rendering the current page. *)
 let any_complete_undos sp =
-  List.fold_left
-    (fun acc e -> 
-       match e with 
-         Action_completed_task tid -> Some tid
-       | _ -> acc)
-    None (Eliom_sessions.get_exn sp)
+  let table = Eliom_sessions.get_request_cache sp in
+  try
+    Some (Polytables.get ~table ~key:action_completed_task)
+  with Not_found ->
+    None
 
 (* Same as any_complete_undos except we check for changed task
    priorities. *)
 let any_task_priority_changes sp =
-  List.fold_left
-    (fun acc e -> 
-       match e with 
-         Action_task_priority_changed tid -> tid::acc
-       | _ -> acc)
-    [] (Eliom_sessions.get_exn sp)
+  let table = Eliom_sessions.get_request_cache sp in
+  try
+    Some (Polytables.get ~table ~key:action_task_priority_changed)
+  with Not_found ->
+    None
 
 let connect_action_handler sp () login_nfo =
   Eliom_sessions.close_session  ~sp () >>= fun () -> 
     set_password_in_session sp login_nfo >>= fun () ->
-      return []
+      return ()
 
 let () =
-  Eliom_predefmod.Actions.register ~service:connect_action connect_action_handler
+  Eliom_predefmod.Action.register ~service:connect_action connect_action_handler
 
 (* /schema_install initializes the database schema (if needed) *)
 let _ =

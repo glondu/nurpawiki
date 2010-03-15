@@ -17,9 +17,9 @@
 module OrdInt = struct type t = int let compare a b = compare a b end
 module IMap = Map.Make (OrdInt)
 
-(* Exceptions returned by Eliom actions *)
-exception Action_completed_task of int
-exception Action_task_priority_changed of int
+(* Sides-effects of Eliom actions *)
+let action_completed_task : int Polytables.key = Polytables.make_key ()
+let action_task_priority_changed : int Polytables.key = Polytables.make_key ()
 
 type user = 
     {

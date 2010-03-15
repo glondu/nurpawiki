@@ -49,10 +49,9 @@ let task_side_effect_complete sp task_id () =
             if Privileges.can_complete_task ~conn task_id user then
               begin
                 Db.complete_task ~conn ~user_id:user.user_id task_id;
-                [Action_completed_task task_id]
-              end
-            else
-              []))
+                let table = Eliom_sessions.get_request_cache sp in
+                Polytables.set ~table ~key:action_completed_task ~value:task_id
+              end))
 
 
 let task_side_effect_undo_complete sp task_id () =
@@ -61,8 +60,7 @@ let task_side_effect_undo_complete sp task_id () =
        Db.with_conn 
          (fun conn ->
             if Privileges.can_complete_task ~conn task_id user then
-              Db.uncomplete_task ~conn ~user_id:user.user_id task_id;
-            []))
+              Db.uncomplete_task ~conn ~user_id:user.user_id task_id))
 
 let task_side_effect_mod_priority sp (task_id, dir) () =
   Session.action_with_user_login sp
@@ -75,18 +73,16 @@ let task_side_effect_mod_priority sp (task_id, dir) () =
                   Db.down_task_priority ~conn task_id
                 else 
                   Db.up_task_priority ~conn task_id;
-                [Action_task_priority_changed task_id]
-              end
-            else
-              []))
-             
+                let table = Eliom_sessions.get_request_cache sp in
+                Polytables.set ~table ~key:action_task_priority_changed ~value:task_id
+              end))
 
 let () =
-  Eliom_predefmod.Actions.register 
+  Eliom_predefmod.Action.register
     ~service:task_side_effect_complete_action task_side_effect_complete;
-  Eliom_predefmod.Actions.register 
+  Eliom_predefmod.Action.register
     ~service:task_side_effect_undo_complete_action task_side_effect_undo_complete;
-  Eliom_predefmod.Actions.register 
+  Eliom_predefmod.Action.register
     ~service:task_side_effect_mod_priority_action task_side_effect_mod_priority
 
 let make_static_uri = Html_util.make_static_uri
@@ -450,7 +446,7 @@ let todo_list_table_html sp ~conn ~cur_user cur_page todos =
               Html_util.priority_css_class todo.t_priority in
           let row_class =
             row_pri_style::
-              (if List.mem id priority_changes then 
+              (if priority_changes = Some id then
                  ["todo_priority_changed"]
                else 
                  []) in
@@ -688,7 +684,7 @@ let _ =
                   (page_name,(None,(None,None)));
                 br ();
                 textarea ~name:chain ~rows:30 ~cols:80 
-                  ~value:(pcdata wikitext) ()])])
+                  ~value:wikitext ()])])
         (page_name,(None,(None,None))) in
     Html_util.html_stub sp
       (wiki_page_contents_html sp ~conn ~cur_user
