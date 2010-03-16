@@ -7,7 +7,7 @@
     <charset>UTF-8</charset> <!-- Default charset for pages -->
 
     <findlib path="%_OCSIGEN_METAS_DIR_%" />
-    <extension findlib-package="ocsigen_ext.staticmod" />
+    <extension findlib-package="ocsigen.ext.staticmod" />
 
     <library module="%_STR_CMA_%"/>
     <library module="%_NUMS_CMA_%"/>
@@ -20,8 +20,8 @@
     <!-- Sqlite is needed by ocsipersist, which is used by Eliom: -->
     <extension module="%_SQLITE3_CMA_%"/>
 
-    <extension findlib-package="ocsigen_ext.ocsipersist-sqlite"/>
-    <extension findlib-package="ocsigen_ext.eliom"/>
+    <extension findlib-package="ocsigen.ext.ocsipersist-sqlite"/>
+    <extension findlib-package="ocsigen.ext.eliom"/>
 
     <host defaulthostname="localhost">
       <site dir="" charset="UTF-8">
