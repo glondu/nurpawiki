@@ -14,11 +14,9 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open XHTML.M
-open Eliom_sessions
-open Eliom_parameters
-open Eliom_services
-open Eliom_predefmod.Xhtml
+open Eliom_content.Html5.F
+open Eliom_parameter
+open Eliom_service
 
 open Config
 open Types
@@ -26,52 +24,51 @@ open Types
 open Lwt
 
 let wiki_view_page = 
-  new_service ["view"] ((string "p")
+  service ["view"] ((string "p")
                         ** (opt (bool "printable"))
                         ** (opt (int "r"))
                         ** (opt (bool "force_login"))) ()
 
-let wiki_start = Eliom_predefmod.String_redirection.register_new_service [] unit
-  (fun sp _ _ -> return (make_uri ~absolute:true ~service:wiki_view_page ~sp (Config.site.cfg_homepage, (None, (None, None)))))
+let wiki_start = Eliom_registration.Redirection.register_service [] unit
+  (fun () () -> return (preapply ~service:wiki_view_page (Config.site.cfg_homepage, (None, (None, None)))))
 
-let wiki_edit_page = new_service ["edit"] (string "p") ()
+let wiki_edit_page = service ["edit"] (string "p") ()
 
-let scheduler_page = new_service ["scheduler"] unit ()
+let scheduler_page = service ["scheduler"] unit ()
 
-let edit_todo_get_page = new_service ["edit_todo"] 
-  ((Eliom_parameters.user_type 
+let edit_todo_get_page = service ["edit_todo"]
+  ((user_type
       et_cont_of_string string_of_et_cont "src_service") **
      (opt (int "tid"))) ()
 
 let edit_todo_page = 
-  new_post_service
+  post_service
     ~fallback:edit_todo_get_page 
     ~post_params:any ()
 
-let history_page = new_service ["history"] (opt (int "nth_p")) ()
+let history_page = service ["history"] (opt (int "nth_p")) ()
 
-let search_page = new_service ["search"] (string "q") ()
+let search_page = service ["search"] (string "q") ()
 
-let benchmark_page = new_service ["benchmark"] (string "test") ()
+let benchmark_page = service ["benchmark"] (string "test") ()
 
-let user_admin_page = new_service ["user_admin"] unit ()
+let user_admin_page = service ["user_admin"] unit ()
 
-let edit_user_page = new_service ["edit_user"] 
+let edit_user_page = service ["edit_user"]
   (opt (string "caller") ** (string "user_to_edit")) ()
 
-let disconnect_page = new_service ["disconnect"] unit ()
+let disconnect_page = service ["disconnect"] unit ()
 
-let about_page = new_service ["about"] unit ()
+let about_page = service ["about"] unit ()
 
-let page_revisions_page = new_service ["page_revisions"] (string "p") ()
+let page_revisions_page = service ["page_revisions"] (string "p") ()
 
 let task_side_effect_complete_action =
-  Eliom_services.new_coservice' ~get_params:(Eliom_parameters.int "task_id") ()
+  coservice' ~get_params:(int "task_id") ()
 
 let task_side_effect_undo_complete_action =
-  Eliom_services.new_coservice' ~get_params:(Eliom_parameters.int "task_id") ()
+  coservice' ~get_params:(int "task_id") ()
 
 let task_side_effect_mod_priority_action = 
-  Eliom_services.new_coservice' ~get_params:((Eliom_parameters.int "task_id") **
-                                              Eliom_parameters.bool "dir") ()
+  coservice' ~get_params:((int "task_id") ** bool "dir") ()
 

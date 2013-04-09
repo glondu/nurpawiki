@@ -20,8 +20,8 @@
     <!-- Sqlite is needed by ocsipersist, which is used by Eliom: -->
     <extension module="%_SQLITE3_CMA_%"/>
 
-    <extension findlib-package="ocsigen.ext.ocsipersist-sqlite"/>
-    <extension findlib-package="ocsigen.ext.eliom"/>
+    <extension findlib-package="ocsigenserver.ext.ocsipersist-sqlite"/>
+    <extension findlib-package="eliom.server"/>
 
     <host defaulthostname="localhost">
       <site dir="" charset="UTF-8">

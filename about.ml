@@ -14,12 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open XHTML.M
-
-open Eliom_sessions
-open Eliom_parameters
-open Eliom_services
-open Eliom_predefmod.Xhtml
+open Eliom_content.Html5.F
 
 open Lwt
 
@@ -34,15 +29,15 @@ let about_page_html =
       br ();
       br ();
       pcdata "See the ";
-      XHTML.M.a ~a:[a_href (uri_of_string "http://code.google.com/p/nurpawiki")]
+      Raw.a ~a:[a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki"))]
         [pcdata "project homepage"];
       pcdata "."]]
 
 let _ =
-  register about_page
-    (fun sp () () ->
-       Session.with_guest_login sp
-         (fun cur_user sp ->
+  Eliom_registration.Html5.register about_page
+    (fun () () ->
+       Session.with_guest_login
+         (fun cur_user ->
             return
-              (Html_util.html_stub sp
-                 (Html_util.navbar_html sp ~cur_user about_page_html))))
+              (Html_util.html_stub
+                 (Html_util.navbar_html ~cur_user about_page_html))))

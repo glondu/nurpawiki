@@ -215,7 +215,7 @@ let upgrade_schema_from_2 ~conn logmsg =
   logged_exec ~conn logmsg "UPDATE nw.version SET schema_version = 3"
 
 (* TODO clean up *)
-let db_schema_version ~conn =
+let db_schema_version_raw conn =
   if table_exists ~conn ~schema:"nw" ~table:"version" then
     let r = guarded_exec ~conn "SELECT (nw.version.schema_version) FROM nw.version" in
     int_of_string (r#get_tuple 0).(0)
@@ -226,31 +226,36 @@ let db_schema_version ~conn =
       let r = guarded_exec ~conn "SELECT (version.schema_version) FROM version" in
       int_of_string (r#get_tuple 0).(0)
 
-let upgrade_schema ~conn =
+let db_schema_version () = with_conn db_schema_version_raw
+
+let upgrade_schema_raw conn =
   (* First find out schema version.. *)
   let logmsg = Buffer.create 0 in
-  if db_schema_version ~conn = 0 then
+  if db_schema_version_raw conn = 0 then
     begin
       Buffer.add_string logmsg "Schema is at version 0\n";
       upgrade_schema_from_0 ~conn logmsg
     end;
-  if db_schema_version ~conn = 1 then
+  if db_schema_version_raw conn = 1 then
     begin
       Buffer.add_string logmsg "Schema is at version 1\n";
       upgrade_schema_from_1 ~conn logmsg
     end;
-  if db_schema_version ~conn = 2 then
+  if db_schema_version_raw conn = 2 then
     begin
       Buffer.add_string logmsg "Schema is at version 2\n";
       upgrade_schema_from_2 ~conn logmsg
     end;
-  assert (db_schema_version ~conn == nurpawiki_schema_version);
+  assert (db_schema_version_raw conn == nurpawiki_schema_version);
   Buffer.contents logmsg
 
+let upgrade_schema () = with_conn upgrade_schema_raw
+
 (** Check whether the nurpawiki schema is properly installed on Psql *)
-let is_schema_installed ~(conn : connection) =
+let is_schema_installed () = with_conn (fun conn ->
   let sql = 
     "SELECT * from pg_tables WHERE (schemaname = 'public' OR schemaname = 'nw') AND "^
       "tablename = 'todos'" in
   let r = guarded_exec ~conn sql in
   r#ntuples <> 0
+)

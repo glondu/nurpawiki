@@ -16,7 +16,6 @@
 
 module P = Printf
 
-open Eliom_sessions
 open Simplexmlparser
 
 type db_config = 
@@ -63,7 +62,7 @@ let dbcfg =
         find_dbcfg xs
     | [] -> 
         raise (Ocsigen_extensions.Error_in_config_file ("Couldn't find database element from config")) in
-  find_dbcfg (get_config ())
+  find_dbcfg (Eliom_config.get_config ())
 
 let site =
   let rec find_site_cfg = function
@@ -88,6 +87,6 @@ let site =
           cfg_allow_ro_guests = false;
           cfg_homepage = "WikiStart";
         } in
-  let cfg = find_site_cfg (get_config ()) in
+  let cfg = find_site_cfg (Eliom_config.get_config ()) in
   Ocsigen_messages.warning (P.sprintf "read-only guests allowed %b" cfg.cfg_allow_ro_guests);
   cfg

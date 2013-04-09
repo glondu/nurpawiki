@@ -19,51 +19,48 @@ type connection
 val with_conn : (connection -> 'a) -> 'a Lwt.t
 val guarded_exec : conn:connection -> string -> Postgresql.result
 val insert_save_page_activity :
-  conn:connection -> user_id:int -> int -> unit
-val query_todos_by_ids : conn:connection -> int list -> Types.todo list
-val query_todo : conn:connection -> int -> Types.todo option
-val todo_exists : conn:connection -> int -> bool
+  user_id:int -> int -> unit Lwt.t
+val query_todos_by_ids : int list -> Types.todo list Lwt.t
+val query_todo : int -> Types.todo option Lwt.t
+val todo_exists : int -> bool Lwt.t
 val update_todo_activation_date :
-  conn:connection -> int -> string -> unit
-val update_todo_descr : conn:connection -> int -> string -> unit
-val update_todo_owner_id : conn:connection -> int -> int option -> unit
+  int -> string -> unit Lwt.t
+val update_todo_descr : int -> string -> unit Lwt.t
+val update_todo_owner_id : int -> int option -> unit Lwt.t
 val query_all_active_todos :
-  conn:connection ->
-  current_user_id:int option -> unit -> Types.todo list
+  current_user_id:int option -> unit -> Types.todo list Lwt.t
 val query_upcoming_todos :
-  conn:connection ->
-  current_user_id:int option -> int option * int option -> Types.todo list
+  current_user_id:int option -> int option * int option -> Types.todo list Lwt.t
 val new_todo : conn:connection -> int -> int -> string -> string
 val todos_in_pages :
-  conn:connection -> int list -> Types.page list Types.IMap.t
+  int list -> Types.page list Types.IMap.t Lwt.t
 val query_activity_in_pages :
-  conn:connection ->
-  min_id:int -> max_id:int -> Types.page list Types.IMap.t
-val query_highest_activity_id : conn:connection -> int
-val query_page_todos : conn:connection -> int -> Types.todo Types.IMap.t
-val update_page_todos : conn:connection -> int -> int list -> unit
+  min_id:int -> max_id:int -> Types.page list Types.IMap.t Lwt.t
+val query_highest_activity_id : unit -> int Lwt.t
+val query_page_todos : int -> Types.todo Types.IMap.t Lwt.t
+val update_page_todos : int -> int list -> unit Lwt.t
 val complete_task :
-  conn:connection -> user_id:int -> Types.IMap.key -> unit
+  user_id:int -> Types.IMap.key -> unit Lwt.t
 val uncomplete_task :
-  conn:connection -> user_id:int -> Types.IMap.key -> unit
-val up_task_priority : int -> conn:connection -> unit
-val down_task_priority : int -> conn:connection -> unit
-val new_wiki_page : conn:connection -> user_id:int -> string -> int
+  user_id:int -> Types.IMap.key -> unit Lwt.t
+val up_task_priority : int -> unit Lwt.t
+val down_task_priority : int -> unit Lwt.t
+val new_wiki_page : user_id:int -> string -> int Lwt.t
 val save_wiki_page :
-  conn:connection -> int -> user_id:int -> string list -> unit
-val find_page_id : conn:connection -> string -> int option
-val page_id_of_page_name : conn:connection -> string -> int
-val wiki_page_exists : conn:connection -> string -> bool
+  int -> user_id:int -> string list -> unit Lwt.t
+val find_page_id : string -> int option Lwt.t
+val page_id_of_page_name : string -> int Lwt.t
+val wiki_page_exists : string -> bool Lwt.t
 val load_wiki_page :
-  conn:connection -> ?revision_id:int option -> int -> string
+  ?revision_id:int option -> int -> string Lwt.t
 val query_page_revisions :
-  conn:connection -> string -> Types.page_revision list
+  string -> Types.page_revision list Lwt.t
 val query_past_activity :
-  conn:connection -> min_id:int -> max_id:int -> Types.activity list
+  min_id:int -> max_id:int -> Types.activity list Lwt.t
 val search_wikipage :
-  conn:connection -> string -> Types.search_result list
-val query_users : conn:connection -> Types.user list
-val query_user : conn:connection -> string -> Types.user option
+  string -> Types.search_result list Lwt.t
+val query_users : unit -> Types.user list Lwt.t
+val query_user : string -> Types.user option Lwt.t
 val add_user :
   conn:connection ->
   login:string -> passwd:string -> real_name:string -> email:string -> unit

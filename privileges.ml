@@ -66,16 +66,16 @@ let user_owns_task_or_is_admin todo cur_user =
 let can_edit_task todo cur_user =
   user_owns_task_or_is_admin todo cur_user
 
-let can_complete_task ~conn task_id cur_user =
-  let todo = Database.query_todo ~conn task_id in
+let can_complete_task task_id cur_user =
+  lwt todo = Database.query_todo task_id in
   match todo with
     Some t -> 
-      user_owns_task_or_is_admin t cur_user
-  | None -> false
+      Lwt.return (user_owns_task_or_is_admin t cur_user)
+  | None -> Lwt.return false
 
-let can_modify_task_priority ~conn task_id cur_user =
-  let todo = Database.query_todo ~conn task_id in
+let can_modify_task_priority task_id cur_user =
+  lwt todo = Database.query_todo task_id in
   match todo with
     Some t -> 
-      user_owns_task_or_is_admin t cur_user
-  | None -> false
+      Lwt.return (user_owns_task_or_is_admin t cur_user)
+  | None -> Lwt.return false

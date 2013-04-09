@@ -14,12 +14,10 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open XHTML.M
+open Eliom_content.Html5.F
 
-open Eliom_sessions
-open Eliom_parameters
-open Eliom_services
-open Eliom_predefmod.Xhtml
+open Eliom_parameter
+open Eliom_service
 
 open Lwt
 open ExtList
@@ -30,38 +28,38 @@ open Types
 
 module Db = Database
 
-let revision_table sp page_descr =
-  Db.with_conn (fun conn -> Db.query_page_revisions ~conn page_descr) >>= fun revisions ->
+let revision_table page_descr =
+  lwt revisions = Db.query_page_revisions page_descr in
 
   let page_link descr (rev:int) = 
-    a ~sp ~service:wiki_view_page [pcdata ("Revision "^(string_of_int rev))]
+    a ~service:wiki_view_page [pcdata ("Revision "^(string_of_int rev))]
       (descr, (None, (Some rev, None))) in
 
   let rows =
     List.map 
       (fun r ->
-         tr (td [page_link page_descr r.pr_revision])
-           [td [pcdata r.pr_created];
-            td [pcdata (Option.default "" r.pr_owner_login)]])
+         tr [td [page_link page_descr r.pr_revision];
+             td [pcdata r.pr_created];
+             td [pcdata (Option.default "" r.pr_owner_login)]])
       revisions in
 
   return
     [table
-       (tr (th [pcdata "Revision"]) [th [pcdata "When"]; th [pcdata "Changed by"]])
+       (tr [th [pcdata "Revision"]; th [pcdata "When"]; th [pcdata "Changed by"]])
        rows]
 
 
-let view_page_revisions sp page_descr =
-  Session.with_guest_login sp
-    (fun cur_user sp ->
-       revision_table sp page_descr >>= fun revisions ->
+let view_page_revisions page_descr =
+  Session.with_guest_login
+    (fun cur_user ->
+       revision_table page_descr >>= fun revisions ->
        return
-         (Html_util.html_stub sp
-            (Html_util.navbar_html sp ~cur_user
+         (Html_util.html_stub
+            (Html_util.navbar_html ~cur_user
                (h1 [pcdata (page_descr ^ " Revisions")] :: revisions))))
 
 (* /page_revisions?page_id=<id> *)
 let _ =
-  register page_revisions_page
-    (fun sp page_descr () ->
-       view_page_revisions sp page_descr)
+  Eliom_registration.Html5.register page_revisions_page
+    (fun page_descr () ->
+       view_page_revisions page_descr)

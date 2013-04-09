@@ -17,7 +17,7 @@
 module Psql = Postgresql
 open Database
 
-let install_schema ~conn =
+let install_schema () = with_conn (fun conn ->
   let sql = "
 --
 -- PostgreSQL database dump
@@ -163,4 +163,5 @@ ALTER TABLE ONLY wikitext
 
 " in
   ignore (guarded_exec ~conn sql);
-  ignore (Database_upgrade.upgrade_schema ~conn)
+  ignore (Database_upgrade.upgrade_schema_raw conn)
+)

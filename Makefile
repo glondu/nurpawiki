@@ -1,9 +1,9 @@
-LIB := -package threads,netstring,calendar,extlib,postgresql,ocsigen
+LIB := -syntax camlp4o -package threads,netstring,calendar,extlib,postgresql,eliom.server,lwt.syntax
 CAMLC := ocamlfind ocamlc -thread -g $(LIB)
 CAMLOPT := ocamlfind ocamlopt -thread  $(LIB)
 CAMLDOC := ocamlfind ocamldoc $(LIB)
-CAMLDEP := ocamlfind ocamldep
-CAMLBUILDOPTS := -ocamlc '$(CAMLC)' -ocamlopt '$(CAMLOPT)'
+CAMLDEP := ocamlfind ocamldep $(LIB)
+CAMLBUILDOPTS := -ocamlc '$(CAMLC)' -ocamlopt '$(CAMLOPT)' -ocamldep '$(CAMLDEP)'
 CAMLBUILD := ocamlbuild $(CAMLBUILDOPTS)
 
 CMA := nurpawiki.cma

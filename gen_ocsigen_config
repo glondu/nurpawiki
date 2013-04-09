@@ -36,7 +36,7 @@ cryptokit_path=`ocamlfind query cryptokit`
 # The way we find Ocsigen METAS directory is extremely hacky.  I don't
 # know of a better way.  See issue 56 in
 # http://code.google.com/p/nurpawiki/issues/list for more info.
-ocsigen_metas_dir="`ocamlfind printconf stdlib`/../../ocsigen/METAS"
+ocsigen_metas_dir="`ocamlfind printconf stdlib`"
 
 if [ "$DEBUG" != "" ]; then
     echo $str_path
@@ -80,7 +80,7 @@ if [ "$DBPASSWD" = "" ]; then
     exit 1
 fi
 
-cat ocsigen.conf.in | \
+cat ocsigenserver.conf.in | \
     sed -e "s|%_OCSIGEN_ROOT_%|$OCSIGEN_ROOT|g" | \
     sed -e "s|%_STR_CMA_%|${str_path}/str.cma|g" | \
     sed -e "s|%_NUMS_CMA_%|${nums_path}/nums.cma|g" | \

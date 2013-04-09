@@ -14,12 +14,10 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open XHTML.M
+open Eliom_content.Html5.F
 
-open Eliom_sessions
-open Eliom_parameters
-open Eliom_services
-open Eliom_predefmod.Xhtml
+open Eliom_parameter
+open Eliom_service
 
 open Lwt
 
@@ -27,50 +25,50 @@ open Config
 open Types
 open Services
 
-let make_static_uri sp name =
-  make_uri (static_dir sp) sp name
+let make_static_uri name =
+  make_uri (static_dir ()) name
 
-let disconnect_box sp s = 
-  Eliom_predefmod.Xhtml.a ~service:disconnect_page ~sp [pcdata s] ()
+let disconnect_box s =
+  a ~service:disconnect_page [pcdata s] ()
 
 (* Use this as the basis for all pages.  Includes CSS etc. *)
-let html_stub sp ?(javascript=[]) body_html =
+let html_stub ?(javascript=[]) body_html =
   let script src = 
-    js_script ~a:[a_defer `Defer] ~uri:(make_static_uri sp src) () in
+    js_script ~a:[a_defer `Defer] ~uri:(make_static_uri src) () in
   let scripts  = 
     script ["nurpawiki.js"] :: (List.map script javascript) in
   html ~a:[a_xmlns `W3_org_1999_xhtml]
     (head
        (title (pcdata ""))
        ((scripts) @
-          [css_link ~a:[] ~uri:(make_uri ~service:(static_dir sp) ~sp
+          [css_link ~a:[] ~uri:(make_uri ~service:(static_dir ())
                                   ["style.css"]) ();
-           css_link ~a:[] ~uri:(make_uri ~service:(static_dir sp) ~sp
+           css_link ~a:[] ~uri:(make_uri ~service:(static_dir ())
                                   ["jscalendar"; "calendar-blue2.css"]) ()]))
     (body body_html)
 
 let is_guest user = 
   user.user_login = "guest"
 
-let navbar_html sp ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_page_links=[]) ?(todo_list_table=[]) content =
+let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_page_links=[]) ?(todo_list_table=[]) content =
   let home_link link_text =
     a ~service:wiki_view_page 
-      ~a:[a_accesskey 'h'; a_class ["ak"]] ~sp:sp link_text 
+      ~a:[a_accesskey 'h'; a_class ["ak"]] link_text
       (Config.site.cfg_homepage, (None, (None, None))) in
   let scheduler_link =
     a ~service:scheduler_page
-      ~a:[a_accesskey 'r'; a_class ["ak"]] ~sp:sp 
-      [img ~alt:"Scheduler" ~src:(make_static_uri sp ["calendar.png"]) ();
+      ~a:[a_accesskey 'r'; a_class ["ak"]]
+      [img ~alt:"Scheduler" ~src:(make_static_uri ["calendar.png"]) ();
        pcdata "Scheduler"] () in
   let history_link =
     a ~service:history_page
-      ~a:[a_accesskey 'r'; a_class ["ak"]] ~sp:sp 
-      [img ~alt:"History" ~src:(make_static_uri sp ["home.png"]) ();
+      ~a:[a_accesskey 'r'; a_class ["ak"]]
+      [img ~alt:"History" ~src:(make_static_uri ["home.png"]) ();
        pcdata "History"] None in
 
   let search_input =
-    [get_form search_page sp
-       (fun (chain : ([`One of string] Eliom_parameters.param_name)) -> 
+    [get_form search_page
+       (fun (chain : ([`One of string] param_name)) ->
           [p [string_input ~input_type:`Submit ~value:"Search" ();
               string_input ~input_type:`Text ~name:chain ()]])] in
 
@@ -80,7 +78,7 @@ let navbar_html sp ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki
       if is_guest cur_user then
         [br(); br ();
          pcdata "To login as an existing user, click ";
-         a ~a:[a_class ["login_link_big"]]~sp ~service:wiki_view_page 
+         a ~a:[a_class ["login_link_big"]] ~service:wiki_view_page
            [pcdata "here"]
            (Config.site.cfg_homepage,(None,(None, Some true)));
          pcdata ".";
@@ -89,42 +87,42 @@ let navbar_html sp ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki
       else 
         [] in
 
-  let disconnect_link sp = 
-    if is_guest cur_user then [] else [disconnect_box sp "Logout"] in
+  let disconnect_link =
+    if is_guest cur_user then [] else [disconnect_box "Logout"] in
 
-  let my_preferences_link sp =
+  let my_preferences_link =
     if is_guest cur_user then 
       [] 
     else 
-      [a ~service:edit_user_page ~sp [pcdata "My Preferences"]
+      [a ~service:edit_user_page [pcdata "My Preferences"]
          (None,cur_user.user_login)] in
 
   let edit_users_link = 
     if Privileges.can_view_users cur_user then
-      [a ~service:user_admin_page ~sp [pcdata "Edit Users"] ()]
+      [a ~service:user_admin_page [pcdata "Edit Users"] ()]
     else 
       [] in
 
   [div ~a:[a_id "topbar"]
      [table ~a:[a_class ["top_menu_size"]]
         (tr
-           (td ~a:[a_class ["top_menu_left_align"]]
+           [td ~a:[a_class ["top_menu_left_align"]]
               [table
-                 (tr (td [home_link 
-                            [img ~alt:"Home" ~src:(make_static_uri sp ["home.png"]) ();
-                             pcdata "Home"]])
-                    [td [scheduler_link];
-                     td [history_link];
-                     td wiki_page_links])
-                 []])
-           [td ~a:[a_class ["top_menu_right_align"]]
-              ([a ~service:about_page ~sp [pcdata "About"] ()] @
+                 (tr [td [home_link
+                            [img ~alt:"Home" ~src:(make_static_uri ["home.png"]) ();
+                             pcdata "Home"]];
+                      td [scheduler_link];
+                      td [history_link];
+                      td wiki_page_links])
+                 []];
+            td ~a:[a_class ["top_menu_right_align"]]
+              ([a ~service:about_page [pcdata "About"] ()] @
                  [pcdata " "] @
-                 my_preferences_link sp @
+                 my_preferences_link @
                  [pcdata " "] @
                  edit_users_link @
                  [pcdata " "] @
-                 disconnect_link sp)]) []]]
+                 disconnect_link)]) []]]
   @
     (if top_info_bar = [] then [] else [div ~a:[a_id "top_action_bar"] top_info_bar])
   @
@@ -136,8 +134,8 @@ let navbar_html sp ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki
 let error text = 
   span ~a:[a_class ["error"]] [pcdata text]
 
-let error_page sp msg =
-  html_stub sp 
+let error_page msg =
+  html_stub
     [p [error msg]]
 
 
@@ -155,7 +153,7 @@ let priority_css_class p =
 let css_palette_ndx_of_wikipage page_id = 
   "palette"^(string_of_int (page_id mod 12))
 
-let todo_page_links_of_pages sp ?(colorize=false) ?(link_css_class=None) ?(insert_parens=true) pages =
+let todo_page_links_of_pages ?(colorize=false) ?(link_css_class=None) ?(insert_parens=true) pages =
   let attrs page = 
     let color_css = 
       if colorize then [css_palette_ndx_of_wikipage page.p_id] else [] in
@@ -163,7 +161,7 @@ let todo_page_links_of_pages sp ?(colorize=false) ?(link_css_class=None) ?(inser
       Some c -> [a_class ([c] @ color_css)]
     | None -> [a_class color_css] in
   let link page = 
-    a ~a:(attrs page) ~service:wiki_view_page ~sp:sp [pcdata page.p_descr]
+    a ~a:(attrs page) ~service:wiki_view_page [pcdata page.p_descr]
       (page.p_descr,(None,(None,None))) in
   let rec insert_commas acc = function
       (x::_::xs) as lst ->
@@ -182,22 +180,22 @@ let todo_page_links_of_pages sp ?(colorize=false) ?(link_css_class=None) ?(inser
   else
     []
 
-let todo_page_links sp todo_in_pages ?(colorize=false) ?(link_css_class=None) ?(insert_parens=true) id =
+let todo_page_links todo_in_pages ?(colorize=false) ?(link_css_class=None) ?(insert_parens=true) id =
   let pages = try IMap.find id todo_in_pages with Not_found -> [] in
-  todo_page_links_of_pages ~colorize sp pages
+  todo_page_links_of_pages ~colorize pages
 
-let todo_edit_img_link sp page_cont task_id =
-  [a ~a:[a_title "Edit"] ~service:edit_todo_get_page ~sp:sp
+let todo_edit_img_link page_cont task_id =
+  [a ~a:[a_title "Edit"] ~service:edit_todo_get_page
      [img ~alt:"Edit" 
-        ~src:(make_static_uri sp ["edit_small.png"]) ()]
+        ~src:(make_static_uri ["edit_small.png"]) ()]
      (page_cont, Some task_id)]
 
-let complete_task_img_link sp task_id =
+let complete_task_img_link task_id =
   let img_html = 
     [img ~alt:"Mark complete" 
-       ~src:(make_static_uri sp ["mark_complete.png"]) ()] in
+       ~src:(make_static_uri ["mark_complete.png"]) ()] in
   a ~service:task_side_effect_complete_action
-    ~a:[a_title "Mark as completed!"] ~sp img_html task_id
+    ~a:[a_title "Mark as completed!"] img_html task_id
 
 let todo_descr_html descr owner = 
   match owner with
@@ -208,7 +206,7 @@ let todo_descr_html descr owner =
 
 
 (* Use to create a "cancel" button for user submits *)
-let cancel_link service sp params =
-  a ~a:[a_class ["cancel_edit"]] ~service:service ~sp:sp 
+let cancel_link service params =
+  a ~a:[a_class ["cancel_edit"]] ~service:service
     [pcdata "Cancel"] 
     params
