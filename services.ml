@@ -17,6 +17,7 @@
 open Eliom_content.Html5.F
 open Eliom_parameter
 open Eliom_service
+open Eliom_service.Http
 
 open Config
 open Types
@@ -71,4 +72,3 @@ let task_side_effect_undo_complete_action =
 
 let task_side_effect_mod_priority_action = 
   coservice' ~get_params:((int "task_id") ** bool "dir") ()
-

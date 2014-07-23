@@ -18,6 +18,7 @@ open Lwt
 open Eliom_content.Html5.F
 open Eliom_parameter
 open Eliom_service
+open Eliom_service.Http
 
 open Services
 open Types
