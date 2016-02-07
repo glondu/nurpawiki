@@ -105,16 +105,16 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
 
   [div ~a:[a_id "topbar"]
      [table ~a:[a_class ["top_menu_size"]]
-        (tr
+        [tr
            [td ~a:[a_class ["top_menu_left_align"]]
               [table
-                 (tr [td [home_link
+                 [tr [td [home_link
                             [img ~alt:"Home" ~src:(make_static_uri ["home.png"]) ();
                              pcdata "Home"]];
                       td [scheduler_link];
                       td [history_link];
-                      td wiki_page_links])
-                 []];
+                      td wiki_page_links]]
+                 ];
             td ~a:[a_class ["top_menu_right_align"]]
               ([a ~service:about_page [pcdata "About"] ()] @
                  [pcdata " "] @
@@ -122,7 +122,7 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
                  [pcdata " "] @
                  edit_users_link @
                  [pcdata " "] @
-                 disconnect_link)]) []]]
+                 disconnect_link)]]]]
   @
     (if top_info_bar = [] then [] else [div ~a:[a_id "top_action_bar"] top_info_bar])
   @

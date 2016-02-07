@@ -48,12 +48,12 @@ let service_save_user_edit =
 let rec view_user_admin_page ~err ~cur_user =
   lwt users = Db.query_users () in
   let users_table = 
-    table 
+    table @@
       (tr 
          [th [pcdata "Id"];
           th [pcdata "Login"];
           th [pcdata "Real Name"];
-          th [pcdata "E-mail"]])
+          th [pcdata "E-mail"]]) ::
       (List.map 
          (fun user ->
             tr 
@@ -75,10 +75,10 @@ let rec view_user_admin_page ~err ~cur_user =
                (fun (login,(passwd,(passwd2,(name,email)))) ->
                   [h2 [pcdata "Create a new user"];
                    (table
-                      (tr
-                         [td [pcdata "Login:"];
-                          td [string_input ~input_type:`Text ~name:login ()]])
                       [tr
+                         [td [pcdata "Login:"];
+                          td [string_input ~input_type:`Text ~name:login ()]];
+                       tr
                          [td [pcdata "Password:"];
                           td [string_input ~input_type:`Password ~name:passwd ()]];
 
@@ -156,11 +156,11 @@ let _ =
 
 let save_user_prefs c_passwd c_passwd2 (c_name,old_name) (c_email,old_email) =
   (table
-     (tr
+     [tr
         [td [pcdata "New Password:"];
          td [string_input ~input_type:`Password ~name:c_passwd ()];
-        ])
-     [tr
+        ];
+      tr
         [td [pcdata "Re-type Password:"];
          td [string_input ~input_type:`Password ~name:c_passwd2 ()]];
 

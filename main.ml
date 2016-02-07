@@ -446,9 +446,9 @@ let todo_list_table_html ~cur_user cur_page todos =
   let priority_changes = Session.any_task_priority_changes () in
 
   return &
-  table ~a:[a_class ["todo_table"]]
+  table ~a:[a_class ["todo_table"]] @@
     (tr 
-       [th [pcdata "Id"]; th [pcdata "Description"]])
+       [th [pcdata "Id"]; th [pcdata "Description"]]) ::
     (List.map
        (fun todo ->
           let id = todo.t_id in

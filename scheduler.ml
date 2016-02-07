@@ -122,11 +122,11 @@ let view_scheduler_page ~cur_user =
        parameter passing of pages. *)
     let table () = 
       [p [raw_input ~input_type:`Submit ~value:"Mass edit" ()];
-       table
-         (tr [th []; th []; th []; th [pcdata "Activates on"]; th [pcdata "Todo"]])
+       table @@
+         (tr [th []; th []; th []; th [pcdata "Activates on"]; th [pcdata "Todo"]]) ::
          (todo_section merged_todos todos_in_pages);
        table
-         (tr 
+         [tr
             [td [button
                    ~a:[a_class ["scheduler_check_button"];
                        a_id "button_select_all"]
@@ -135,8 +135,8 @@ let view_scheduler_page ~cur_user =
              td [button
                    ~a:[a_class ["scheduler_check_button"];
                        a_id "button_deselect_all"]
-                   ~button_type:`Button [pcdata "Unselect All"]]])
-         []] in
+                   ~button_type:`Button [pcdata "Unselect All"]]]]
+         ] in
     
     let table' = 
       post_form edit_todo_page table (ET_scheduler, None) in
@@ -232,9 +232,9 @@ let rec render_todo_editor ~cur_user (src_page_cont, todos_to_edit) =
     (* See nurpawiki_calendar.js for JavaScript calendar binding
        details. *)
     let create_listform f = 
-      [table 
+      [table @@
          (tr [th [pcdata "ID"];
-              th [pcdata "Description"]; th [pcdata "Activates on"]])
+              th [pcdata "Description"]; th [pcdata "Activates on"]]) ::
          (f.it
             (fun (tv_id,(tv_act_date,(tv_descr,tv_owner_id))) todo accu ->
                let pri_style = 

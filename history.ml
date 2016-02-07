@@ -150,11 +150,11 @@ let view_history_page ~cur_user ~nth_page =
   let activity_groups = group_activities activity activity_in_pages in
 
   let act_table = 
-    table ~a:[a_class ["todo_table"]]
+    table ~a:[a_class ["todo_table"]] @@
       (tr [th [];
            th [pcdata "Activity"];
            th [pcdata "By"];
-           th [pcdata "Details"]])
+           th [pcdata "Details"]]) ::
       (List.rev
          (fst 
             (RSMap.fold

@@ -44,8 +44,8 @@ let revision_table page_descr =
       revisions in
 
   return
-    [table
-       (tr [th [pcdata "Revision"]; th [pcdata "When"]; th [pcdata "Changed by"]])
+    [table @@
+       (tr [th [pcdata "Revision"]; th [pcdata "When"]; th [pcdata "Changed by"]]) ::
        rows]
 
 

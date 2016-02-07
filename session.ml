@@ -109,9 +109,9 @@ let login_html ~err =
           [post_form connect_action
              (fun (loginname,passwd) ->
                 [table ~a:[a_class ["login_box"]]
-                   (tr [td ~a:[a_class ["login_text"]]
-                          (pcdata "Welcome to Nurpawiki!"::help_text)])
-                   [tr [td [pcdata ""]];
+                   [tr [td ~a:[a_class ["login_text"]]
+                          (pcdata "Welcome to Nurpawiki!"::help_text)];
+                    tr [td [pcdata ""]];
                     tr [td ~a:[a_class ["login_text_descr"]]
                           [pcdata "Username:"]];
                     tr [td [string_input ~input_type:`Text ~name:loginname ()]];
