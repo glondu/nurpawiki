@@ -14,10 +14,9 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
 open Eliom_parameter
 open Eliom_service
-open Eliom_service.Http
 
 open Config
 open Types
@@ -25,50 +24,50 @@ open Types
 open Lwt
 
 let wiki_view_page = 
-  service ["view"] ((string "p")
+  create ~path:(Path ["view"]) ~meth:(Get ((string "p")
                         ** (opt (bool "printable"))
                         ** (opt (int "r"))
-                        ** (opt (bool "force_login"))) ()
+                        ** (opt (bool "force_login")))) ()
 
-let wiki_start = Eliom_registration.Redirection.register_service [] unit
-  (fun () () -> return (preapply ~service:wiki_view_page (Config.site.cfg_homepage, (None, (None, None)))))
+let wiki_start = Eliom_registration.Redirection.create ~path:(Path []) ~meth:(Get unit)
+  (fun () () -> return (Eliom_registration.Redirection (preapply ~service:wiki_view_page (Config.site.cfg_homepage, (None, (None, None))))))
 
-let wiki_edit_page = service ["edit"] (string "p") ()
+let wiki_edit_page = create ~path:(Path ["edit"]) ~meth:(Get (string "p")) ()
 
-let scheduler_page = service ["scheduler"] unit ()
+let scheduler_page = create ~path:(Path ["scheduler"]) ~meth:(Get unit) ()
 
-let edit_todo_get_page = service ["edit_todo"]
-  ((user_type
+let edit_todo_get_page = create ~path:(Path ["edit_todo"])
+  ~meth:(Get ((user_type
       et_cont_of_string string_of_et_cont "src_service") **
-     (opt (int "tid"))) ()
+     (opt (int "tid")))) ()
 
 let edit_todo_page = 
-  post_service
+  create_attached_post
     ~fallback:edit_todo_get_page 
     ~post_params:any ()
 
-let history_page = service ["history"] (opt (int "nth_p")) ()
+let history_page = create ~path:(Path ["history"]) ~meth:(Get (opt (int "nth_p"))) ()
 
-let search_page = service ["search"] (string "q") ()
+let search_page = create ~path:(Path ["search"]) ~meth:(Get (string "q")) ()
 
-let benchmark_page = service ["benchmark"] (string "test") ()
+let benchmark_page = create ~path:(Path ["benchmark"]) ~meth:(Get (string "test")) ()
 
-let user_admin_page = service ["user_admin"] unit ()
+let user_admin_page = create ~path:(Path ["user_admin"]) ~meth:(Get unit) ()
 
-let edit_user_page = service ["edit_user"]
-  (opt (string "caller") ** (string "user_to_edit")) ()
+let edit_user_page = create ~path:(Path ["edit_user"])
+  ~meth:(Get (opt (string "caller") ** (string "user_to_edit"))) ()
 
-let disconnect_page = service ["disconnect"] unit ()
+let disconnect_page = create ~path:(Path ["disconnect"]) ~meth:(Get unit) ()
 
-let about_page = service ["about"] unit ()
+let about_page = create ~path:(Path ["about"]) ~meth:(Get unit) ()
 
-let page_revisions_page = service ["page_revisions"] (string "p") ()
+let page_revisions_page = create ~path:(Path ["page_revisions"]) ~meth:(Get (string "p")) ()
 
 let task_side_effect_complete_action =
-  coservice' ~get_params:(int "task_id") ()
+  create ~path:No_path ~meth:(Get (int "task_id")) ()
 
 let task_side_effect_undo_complete_action =
-  coservice' ~get_params:(int "task_id") ()
+  create ~path:No_path ~meth:(Get (int "task_id")) ()
 
 let task_side_effect_mod_priority_action = 
-  coservice' ~get_params:((int "task_id") ** bool "dir") ()
+  create ~path:No_path ~meth:(Get ((int "task_id") ** bool "dir")) ()

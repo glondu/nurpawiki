@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
 
 open Eliom_parameter
 open Eliom_service
@@ -32,20 +32,20 @@ let revision_table page_descr =
   let%lwt revisions = Db.query_page_revisions page_descr in
 
   let page_link descr (rev:int) = 
-    a ~service:wiki_view_page [pcdata ("Revision "^(string_of_int rev))]
+    a ~service:wiki_view_page [txt ("Revision "^(string_of_int rev))]
       (descr, (None, (Some rev, None))) in
 
   let rows =
     List.map 
       (fun r ->
          tr [td [page_link page_descr r.pr_revision];
-             td [pcdata r.pr_created];
-             td [pcdata (Option.default "" r.pr_owner_login)]])
+             td [txt r.pr_created];
+             td [txt (Option.default "" r.pr_owner_login)]])
       revisions in
 
   return
     [table @@
-       (tr [th [pcdata "Revision"]; th [pcdata "When"]; th [pcdata "Changed by"]]) ::
+       (tr [th [txt "Revision"]; th [txt "When"]; th [txt "Changed by"]]) ::
        rows]
 
 
@@ -56,10 +56,10 @@ let view_page_revisions page_descr =
        return
          (Html_util.html_stub
             (Html_util.navbar_html ~cur_user
-               (h1 [pcdata (page_descr ^ " Revisions")] :: revisions))))
+               (h1 [txt (page_descr ^ " Revisions")] :: revisions))))
 
 (* /page_revisions?page_id=<id> *)
 let _ =
-  Eliom_registration.Html5.register page_revisions_page
+  Eliom_registration.Html.register page_revisions_page
     (fun page_descr () ->
        view_page_revisions page_descr)

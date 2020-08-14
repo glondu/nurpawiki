@@ -15,7 +15,7 @@
  *)
 
 module P = Printf
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
 
 open Eliom_parameter
 open Eliom_service
@@ -125,12 +125,12 @@ let page_links cur_page max_pages =
     let p = string_of_int i in
     let link = 
       if cur_page = i then
-        strong [pcdata p]
+        strong [txt p]
       else 
-        a ~service:history_page [pcdata p] (Some i) in
-    links := link :: pcdata " " :: !links 
+        a ~service:history_page [txt p] (Some i) in
+    links := link :: txt " " :: !links 
   done;
-  pcdata "More pages: " :: List.rev !links
+  txt "More pages: " :: List.rev !links
 
 let view_history_page ~cur_user ~nth_page =
   let%lwt highest_log_id = Database.query_highest_activity_id () in
@@ -152,9 +152,9 @@ let view_history_page ~cur_user ~nth_page =
   let act_table = 
     table ~a:[a_class ["todo_table"]] @@
       (tr [th [];
-           th [pcdata "Activity"];
-           th [pcdata "By"];
-           th [pcdata "Details"]]) ::
+           th [txt "Activity"];
+           th [txt "By"];
+           th [txt "Details"]]) ::
       (List.rev
          (fst 
             (RSMap.fold
@@ -164,16 +164,16 @@ let view_history_page ~cur_user ~nth_page =
                     if prev_date = prettified_date then
                       []
                     else 
-                      [pcdata prettified_date] in
+                      [txt prettified_date] in
 
                   let todo_html ty lst = 
                     List.rev
                       (List.mapi
                          (fun ndx (todo,changed_by,pages) ->
                             (tr [td [];
-                                 td (if ndx = 0 then [pcdata ty] else []);
-                                 td ~a:[a_class ["todo_owner"]] [pcdata changed_by];
-                                 td ([pcdata todo] @
+                                 td (if ndx = 0 then [txt ty] else []);
+                                 td ~a:[a_class ["todo_owner"]] [txt changed_by];
+                                 td ([txt todo] @
                                         (Html_util.todo_page_links_of_pages
                                            ~colorize:true pages))]))
                          lst) in
@@ -187,10 +187,10 @@ let view_history_page ~cur_user ~nth_page =
                   let pages_html = 
                     if e.ag_edited_pages <> [] then
                       [tr [td [];
-                           td [pcdata "Edited"];
+                           td [txt "Edited"];
                            td
                              ~a:[a_class ["todo_owner"]]
-                             [pcdata (String.concat "," e.ag_page_editors)];
+                             [txt (String.concat "," e.ag_page_editors)];
                            td (Html_util.todo_page_links_of_pages
                                  ~colorize:true ~insert_parens:false
                                  (remove_duplicates e.ag_edited_pages))]]
@@ -205,13 +205,13 @@ let view_history_page ~cur_user ~nth_page =
                activity_groups ([],"")))) in
   return & Html_util.html_stub
     (Html_util.navbar_html ~cur_user
-       ([h1 [pcdata "Blast from the past"]] @ 
+       ([h1 [txt "Blast from the past"]] @ 
           (page_links nth_page n_total_pages) @ [br (); br ()] @
           [act_table]))
 
 (* /history *)
 let _ =
-  Eliom_registration.Html5.register history_page
+  Eliom_registration.Html.register history_page
     (fun nth_page () ->
        Session.with_guest_login
          (fun cur_user ->

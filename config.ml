@@ -16,7 +16,7 @@
 
 module P = Printf
 
-open Simplexmlparser
+open Xml
 
 type db_config = 
     {

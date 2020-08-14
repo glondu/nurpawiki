@@ -15,9 +15,9 @@
  *)
 
 open Lwt
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
+open Eliom_content.Html.F.Form
 open Eliom_service
-open Eliom_service.Http
 open Eliom_parameter
 
 open Services
@@ -48,19 +48,19 @@ let set_password_in_session login_info =
   set_persistent_data_cookie_exp_date ~cookie_scope (Some 3153600000.0) >>= fun () ->
   Eliom_reference.set login_eref (Some login_info)
 
-let upgrade_page = service ["upgrade"] unit ()
+let upgrade_page = create ~path:(Path ["upgrade"]) ~meth:(Get unit) ()
 
-let schema_install_page = service ["schema_install"] unit ()
+let schema_install_page = create ~path:(Path ["schema_install"]) ~meth:(Get unit) ()
 
 let connect_action = 
-  post_coservice'
-    ~post_params:((string "login") ** (string "passwd"))
+  create ~path:No_path
+    ~meth:(Post (unit, (string "login") ** (string "passwd")))
     ()
     
 
 let link_to_nurpawiki_main sp = 
   a ~service:wiki_view_page
-    [pcdata "Take me to Nurpawiki"] 
+    [txt "Take me to Nurpawiki"] 
     (Config.site.cfg_homepage,(None,(None,None)))
 
 (* Get logged in user as an option *)
@@ -68,39 +68,39 @@ let get_login_user () =
   Eliom_reference.get login_eref
 
 let db_upgrade_warning () =
-  [h1 [pcdata "Database Upgrade Warning!"];
+  [h1 [txt "Database Upgrade Warning!"];
    p
-     [pcdata "An error occured when Nurpawiki was trying to access database.";
+     [txt "An error occured when Nurpawiki was trying to access database.";
       br ();
       strong [
-        pcdata "You might be seeing this for a couple of reasons:";
+        txt "You might be seeing this for a couple of reasons:";
         br ()];
       br ();
-      pcdata "1) You just installed Nurpawiki and this is the first time you're running Nurpawiki on your database!"; br ();
-      pcdata "2) You have upgraded an existing Nurpawiki installation and this is the first time you're running it since upgrade."; br ();
+      txt "1) You just installed Nurpawiki and this is the first time you're running Nurpawiki on your database!"; br ();
+      txt "2) You have upgraded an existing Nurpawiki installation and this is the first time you're running it since upgrade."; br ();
       br ();
-      pcdata "In order to continue, your DB needs to be upgraded. ";
-      pcdata "If you have valuable data in your DB, please take a backup of it before proceeding!";
+      txt "In order to continue, your DB needs to be upgraded. ";
+      txt "If you have valuable data in your DB, please take a backup of it before proceeding!";
       br ();
       br ();
-      a ~service:upgrade_page [pcdata "Upgrade now!"] ()]]
+      a ~service:upgrade_page [txt "Upgrade now!"] ()]]
 
 let db_installation_error () =
   [div
-     [h1 [pcdata "Database schema not installed"];
+     [h1 [txt "Database schema not installed"];
       br ();
-      p [pcdata "It appears you're using your Nurpawiki installation for the first time. "; br (); br ();
-         pcdata "In order to complete Nurpawiki installation, your Nurpawiki database schema needs to be initialized."];
-      p [pcdata "Follow this link to complete installation:"; br (); br ();
-         a ~service:schema_install_page [pcdata "Install schema!"] ()]]]
+      p [txt "It appears you're using your Nurpawiki installation for the first time. "; br (); br ();
+         txt "In order to complete Nurpawiki installation, your Nurpawiki database schema needs to be initialized."];
+      p [txt "Follow this link to complete installation:"; br (); br ();
+         a ~service:schema_install_page [txt "Install schema!"] ()]]]
      
 
 let login_html ~err =
   let help_text = 
     [br (); br (); 
-     strong [pcdata "Please read "];
-     Raw.a ~a:[a_id "login_help_url"; a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki/wiki/Tutorial"))] [pcdata "Nurpawiki tutorial"];
-     pcdata " if you're logging in for the first time.";
+     strong [txt "Please read "];
+     Raw.a ~a:[a_id "login_help_url"; a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki/wiki/Tutorial"))] [txt "Nurpawiki tutorial"];
+     txt " if you're logging in for the first time.";
      br ()] in
 
   Html_util.html_stub
@@ -110,15 +110,15 @@ let login_html ~err =
              (fun (loginname,passwd) ->
                 [table ~a:[a_class ["login_box"]]
                    [tr [td ~a:[a_class ["login_text"]]
-                          (pcdata "Welcome to Nurpawiki!"::help_text)];
-                    tr [td [pcdata ""]];
+                          (txt "Welcome to Nurpawiki!"::help_text)];
+                    tr [td [txt ""]];
                     tr [td ~a:[a_class ["login_text_descr"]]
-                          [pcdata "Username:"]];
-                    tr [td [string_input ~input_type:`Text ~name:loginname ()]];
+                          [txt "Username:"]];
+                    tr [td [input ~input_type:`Text ~name:loginname Form.string]];
                     tr [td ~a:[a_class ["login_text_descr"]]
-                          [pcdata "Password:"]];
-                    tr [td [string_input ~input_type:`Password ~name:passwd ()]];
-                    tr [td [string_input ~input_type:`Submit ~value:"Login" ()]]];
+                          [txt "Password:"]];
+                    tr [td [input ~input_type:`Password ~name:passwd Form.string]];
+                    tr [td [input ~input_type:`Submit ~value:"Login" Form.string]]];
                  p err]) ()]]]
 
 
@@ -244,33 +244,33 @@ let () =
 
 (* /schema_install initializes the database schema (if needed) *)
 let _ =
-  Eliom_registration.Html5.register schema_install_page
+  Eliom_registration.Html.register schema_install_page
     (fun () () ->
        Database_schema.install_schema ();%lwt
        return
          (Html_util.html_stub
-            [h1 [pcdata "Database installation completed"];
+            [h1 [txt "Database installation completed"];
              p [br ();
                 link_to_nurpawiki_main ()]]))
 
 (* /upgrade upgrades the database schema (if needed) *)
 let _ =
-  Eliom_registration.Html5.register upgrade_page
+  Eliom_registration.Html.register upgrade_page
     (fun () () ->
        let%lwt msg = Dbu.upgrade_schema () in
        return
          (Html_util.html_stub
-            [h1 [pcdata "Upgrade DB schema"];
-             (pre [pcdata msg]);
+            [h1 [txt "Upgrade DB schema"];
+             (pre [txt msg]);
              p [br ();
                 link_to_nurpawiki_main ()]]))
 
 let _ =
-  Eliom_registration.Html5.register disconnect_page
+  Eliom_registration.Html.register disconnect_page
     (fun () () ->
        Eliom_state.discard ~scope () >>= fun () ->
         return
           (Html_util.html_stub
-             [h1 [pcdata "Logged out!"];
+             [h1 [txt "Logged out!"];
               p [br ();
                  link_to_nurpawiki_main ()]]))

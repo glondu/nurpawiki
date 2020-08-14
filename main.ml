@@ -14,7 +14,8 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
+open Eliom_content.Html.F.Form
 
 open Eliom_parameter
 open Eliom_service
@@ -253,15 +254,15 @@ module WikiML =
           let t = if text = "" then page else text in
           let%lwt b = Db.wiki_page_exists page in
           if b then
-            a wiki_view_page [pcdata t] (page, (None, (None, None))) |> return
+            a wiki_view_page [txt t] (page, (None, (None, None))) |> return
           else 
             a ~a:[a_class ["missing_page"]] 
-              ~service:wiki_view_page [pcdata t]
+              ~service:wiki_view_page [txt t]
               (page,(None,(None,None))) |> return
         else (* External link *)
           let url = scheme^":"^page in
           let t = if text = "" then url else text in
-          return & Raw.a ~a:[a_href (uri_of_string (fun () -> url))] [pcdata t] in
+          return & Raw.a ~a:[a_href (uri_of_string (fun () -> url))] [txt t] in
 
       let add_html html_acc html =
         html::html_acc in
@@ -281,7 +282,7 @@ module WikiML =
               [todo_modify_buttons ~cur_user cur_page todo_id todo;
                span ~a:[a_class style] (Html_util.todo_descr_html todo.t_descr todo.t_owner)]
           with Not_found -> 
-            (pcdata "UNKNOWN TODO ID!") in
+            (txt "UNKNOWN TODO ID!") in
         add_html acc html in
 
       let seqmatch s charpos ~default = 
@@ -312,10 +313,10 @@ module WikiML =
           else 
             if s.[charpos] = '\t' then 
               let m = "\t" in
-              loop (add_html acc (pcdata m)) (charpos+1)
+              loop (add_html acc (txt m)) (charpos+1)
             else if s.[charpos] = ' ' then 
               let m = " " in
-              loop (add_html acc (pcdata m)) (charpos+1)
+              loop (add_html acc (txt m)) (charpos+1)
             else if s.[charpos] = '\r' || s.[charpos] = '\n' then
               return acc
             else 
@@ -331,7 +332,7 @@ module WikiML =
                         a link but leave it as text. *)
                      if m.[0] = '!' then
                        let s = String.sub m 1 (String.length m - 1) in
-                       loop (add_html acc (pcdata s)) (charpos+(String.length m))
+                       loop (add_html acc (txt s)) (charpos+(String.length m))
                      else
                        let%lwt h = wikilink "" m m in
                        loop (add_html acc h) (charpos+fmlen)));
@@ -351,19 +352,19 @@ module WikiML =
                      loop (add_html acc h) (charpos+fmlen)));
                  (italic_re,
                   (fun fmlen r ->
-                     let h = em [pcdata r.(2)] in
+                     let h = em [txt r.(2)] in
                      loop (add_html acc h) (charpos+fmlen)));
                  (bold_re,
                   (fun fmlen r ->
-                     let h = strong [pcdata r.(2)] in
+                     let h = strong [txt r.(2)] in
                      loop (add_html acc h) (charpos+fmlen)));
                  (code_re,
                   (fun fmlen r ->
-                     let h = code [pcdata r.(2)] in
+                     let h = code [txt r.(2)] in
                      loop (add_html acc h) (charpos+fmlen)));
                  (text_re,
                   (fun fmlen r ->
-                     loop (add_html acc (pcdata r.(1))) (charpos+fmlen)))]
+                     loop (add_html acc (txt r.(1))) (charpos+fmlen)))]
         in
         loop acc 0 >>= wrap1 List.rev in
       
@@ -402,9 +403,9 @@ module WikiML =
               loop ((translate_list list_items)::acc) after_bullets in
             
             let wiki_pats =
-              [(h3_re, (fun r -> loop ((h3 [pcdata r.(1)])::acc) xs));
-               (h2_re, (fun r -> loop ((h2 [pcdata r.(1)])::acc) xs));
-               (h1_re, (fun r -> loop ((h1 [pcdata r.(1)])::acc) xs));
+              [(h3_re, (fun r -> loop ((h3 [txt r.(1)])::acc) xs));
+               (h2_re, (fun r -> loop ((h2 [txt r.(1)])::acc) xs));
+               (h1_re, (fun r -> loop ((h1 [txt r.(1)])::acc) xs));
                (ws_or_empty_re, (fun r -> loop acc xs));
                (list_re, (fun r -> parse_list r))] in
 
@@ -416,7 +417,7 @@ module WikiML =
                   loop ((p x)::acc) xs
             end
         | (`NoWiki x::xs) ->
-            loop (pre [pcdata (String.concat "\n" x)]::acc) xs
+            loop (pre [txt (String.concat "\n" x)]::acc) xs
         | [] -> return & List.rev acc in
       
       loop [] preprocessed_lines
@@ -448,7 +449,7 @@ let todo_list_table_html ~cur_user cur_page todos =
   return &
   table ~a:[a_class ["todo_table"]] @@
     (tr 
-       [th [pcdata "Id"]; th [pcdata "Description"]]) ::
+       [th [txt "Id"]; th [txt "Description"]]) ::
     (List.map
        (fun todo ->
           let id = todo.t_id in
@@ -465,7 +466,7 @@ let todo_list_table_html ~cur_user cur_page todos =
                else 
                  []) in
           (tr 
-             [td ~a:[a_class row_class] [pcdata (string_of_int id)];
+             [td ~a:[a_class row_class] [txt (string_of_int id)];
               td ~a:[a_class row_class] (todo_page_link todo);
               td [(WikiML.todo_modify_buttons ~cur_user cur_page id todo)]]))
        todos)
@@ -475,15 +476,15 @@ let wiki_page_menu_html ~cur_user page content =
   let edit_link = 
     [a ~service:wiki_edit_page ~a:[a_accesskey '1'; a_class ["ak"]]
        [img ~alt:"Edit" ~src:(make_static_uri ["edit.png"]) ();
-        pcdata "Edit page"] page] in
+        txt "Edit page"] page] in
 
   let printable_link =
     [a ~service:wiki_view_page
-       ~a:[a_accesskey 'p'; a_class ["ak"]] [pcdata "Print"]
+       ~a:[a_accesskey 'p'; a_class ["ak"]] [txt "Print"]
        (page, (Some true,(None,None)))] in
 
   let revisions_link =
-    [a ~service:page_revisions_page [pcdata "View past versions"] page;
+    [a ~service:page_revisions_page [txt "View past versions"] page;
      br (); br ()] in
 
   let current_user_id = Some cur_user.user_id in
@@ -498,13 +499,13 @@ let wiki_page_menu_html ~cur_user page content =
       None -> []
     | Some id ->
         [span ~a:[a_class ["action_bar"]]
-           [pcdata ("Completed task "^string_of_int id^" ");
+           [txt ("Completed task "^string_of_int id^" ");
             a ~a:[a_class ["undo_link"]] 
               ~service:task_side_effect_undo_complete_action 
-              [pcdata "Undo"] id]] in
+              [txt "Undo"] id]] in
 
   return & Html_util.navbar_html ~cur_user
-    ~wiki_page_links:(edit_link @ [pcdata " "] @  printable_link)
+    ~wiki_page_links:(edit_link @ [txt " "] @  printable_link)
     ~wiki_revisions_link:revisions_link
     ~top_info_bar
     ~todo_list_table:[todo_list] content
@@ -632,7 +633,7 @@ items)
 
 (* Save page as a result of /edit?p=Page *)
 let service_save_page_post =
-  Eliom_registration.Html5.register_post_service
+  Eliom_registration.Html.create_attached_post
     ~fallback:wiki_view_page
     ~post_params:(string "value")
     (fun (page, _) value ->
@@ -697,7 +698,7 @@ let _ =
     let f =
       post_form service_save_page_post
         (fun chain -> 
-           [(p [string_input ~input_type:`Submit ~value:"Save" (); 
+           [(p [input ~input_type:`Submit ~value:"Save" Form.string; 
                 Html_util.cancel_link wiki_view_page
                   (page_name,(None,(None,None)));
                 br ();
@@ -711,7 +712,7 @@ let _ =
     return & Html_util.html_stub h
   in
 
-  Eliom_registration.Html5.register wiki_edit_page
+  Eliom_registration.Html.register wiki_edit_page
     (fun page_name () ->
        Session.with_user_login
          (fun cur_user ->
@@ -724,13 +725,13 @@ let view_wiki_page ~cur_user (page_name, (printable, (revision_id, _))) =
       view_page ~cur_user ~revision_id page_id page_name ~printable
   | None ->
       let f = 
-        a wiki_edit_page [pcdata "Create new page"] page_name in
+        a wiki_edit_page [txt "Create new page"] page_name in
       let%lwt h = wiki_page_menu_html ~cur_user page_name [f] in
       return & Html_util.html_stub h
 
 (* /view?p=Page *)
 let _ = 
-  Eliom_registration.Html5.register wiki_view_page
+  Eliom_registration.Html.register wiki_view_page
     (fun ((_, (_, (_, force_login))) as params) () ->
        (* If forced login is not requested, we'll let read-only guests
           in (if current configuration allows it) *)
@@ -749,20 +750,20 @@ let _ =
   let gen_html = function
       "empty" ->
         (html 
-           (head (title (pcdata "")) [])
-           (body [p [pcdata "Empty page"]]))
+           (head (title (txt "")) [])
+           (body [p [txt "Empty page"]]))
     | "db1" ->
         (* TODO TODO add simple SQL query here *)
 (*        ignore (Db.query_activities ());*)
         (html 
-           (head (title (pcdata "")) [])
-           (body [p [pcdata "Test one DB query"]]))
+           (head (title (txt "")) [])
+           (body [p [txt "Test one DB query"]]))
     | _ ->
         (html 
-           (head (title (pcdata "")) [])
-           (body [p [pcdata "invalid 'test' param!"]])) in
+           (head (title (txt "")) [])
+           (body [p [txt "invalid 'test' param!"]])) in
   
-  Eliom_registration.Html5.register benchmark_page
+  Eliom_registration.Html.register benchmark_page
     (fun test_id () ->
        return (gen_html test_id))
 
@@ -777,7 +778,7 @@ let _ =
               (List.rev (List.fold_left (fun acc e -> (html_of_elem e)::acc) [] c)) in
           [(span ~a:[a_class ["sr_hilite"]] c)]
       | Nethtml.Element (_,_,_) -> []
-      | Nethtml.Data s -> [pcdata s] in
+      | Nethtml.Data s -> [txt s] in
 
     let ch = new Netchannels.input_string h in
     let doc = Nethtml.parse ch in
@@ -793,7 +794,7 @@ let _ =
               SR_page ->
                 let link descr = 
                   a ~a:[a_class ["sr_link"]] ~service:wiki_view_page
-                    [pcdata descr]
+                    [txt descr]
                     (descr,(None,(None,None))) in
                 [p ([link (Option.get sr.sr_page_descr); br ()] @ 
                       html_of_headline sr.sr_headline)]
@@ -803,10 +804,10 @@ let _ =
     return
       (Html_util.html_stub
          (Html_util.navbar_html ~cur_user
-            ([h1 [pcdata "Search results"]] @ (render_results search_results))))
+            ([h1 [txt "Search results"]] @ (render_results search_results))))
   in
 
-  Eliom_registration.Html5.register search_page
+  Eliom_registration.Html.register search_page
     (fun search_str () ->
        Session.with_guest_login
          (fun cur_user ->

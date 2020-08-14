@@ -15,10 +15,10 @@
  *)
 
 open Lwt
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
+open Eliom_content.Html.F.Form
 open Eliom_parameter
 open Eliom_service
-open Eliom_service.Http
 
 open Services
 open Types
@@ -26,7 +26,7 @@ open Types
 module Db = Database
 
 let service_create_new_user = 
-  post_service
+  create_attached_post
     ~fallback:user_admin_page
     ~post_params:((string "login") ** 
                     (string "pass") ** 
@@ -36,7 +36,7 @@ let service_create_new_user =
     ()
 
 let service_save_user_edit =
-  post_service
+  create_attached_post
     ~fallback:edit_user_page
     ~post_params:((string "pass") ** 
                     (string "pass2") **  (* re-type *)
@@ -50,52 +50,52 @@ let rec view_user_admin_page ~err ~cur_user =
   let users_table = 
     table @@
       (tr 
-         [th [pcdata "Id"];
-          th [pcdata "Login"];
-          th [pcdata "Real Name"];
-          th [pcdata "E-mail"]]) ::
+         [th [txt "Id"];
+          th [txt "Login"];
+          th [txt "Real Name"];
+          th [txt "E-mail"]]) ::
       (List.map 
          (fun user ->
             tr 
-              [td [pcdata (string_of_int user.user_id)];
-               td [pcdata user.user_login];
-               td [pcdata user.user_real_name];
-               td [pcdata user.user_email];
-               td [a ~service:edit_user_page [pcdata "Edit"]
+              [td [txt (string_of_int user.user_id)];
+               td [txt user.user_login];
+               td [txt user.user_real_name];
+               td [txt user.user_email];
+               td [a ~service:edit_user_page [txt "Edit"]
                      (Some "user_admin", user.user_login)]])
          users) in
 
   return
     (Html_util.html_stub
        (Html_util.navbar_html ~cur_user
-          ([h1 [pcdata "Edit users"];
+          ([h1 [txt "Edit users"];
             users_table] @
              err @
             [post_form ~service:service_create_new_user
                (fun (login,(passwd,(passwd2,(name,email)))) ->
-                  [h2 [pcdata "Create a new user"];
+                  [h2 [txt "Create a new user"];
                    (table
                       [tr
-                         [td [pcdata "Login:"];
-                          td [string_input ~input_type:`Text ~name:login ()]];
+                         [td [txt "Login:"];
+                          td [input ~input_type:`Text ~name:login Form.string]];
                        tr
-                         [td [pcdata "Password:"];
-                          td [string_input ~input_type:`Password ~name:passwd ()]];
+                         [td [txt "Password:"];
+                          td [input ~input_type:`Password ~name:passwd Form.string]];
 
                        tr
-                         [td [pcdata "Re-type password:"];
-                          td [string_input ~input_type:`Password ~name:passwd2 ()]];
+                         [td [txt "Re-type password:"];
+                          td [input ~input_type:`Password ~name:passwd2 Form.string]];
 
                        tr
-                         [td [pcdata "Name:"];
-                          td [string_input ~input_type:`Text ~name:name ()]];
+                         [td [txt "Name:"];
+                          td [input ~input_type:`Text ~name:name Form.string]];
 
                        tr
-                         [td [pcdata "E-mail address:"];
-                          td [string_input ~input_type:`Text ~name:email ()]];
+                         [td [txt "E-mail address:"];
+                          td [input ~input_type:`Text ~name:email Form.string]];
 
                        tr
-                         [td [string_input ~input_type:`Submit ~value:"Add User" ()]]
+                         [td [input ~input_type:`Submit ~value:"Add User" Form.string]]
                          ])]) ()])))
 
 (* Only allow certain types of login names to avoid surprises *)
@@ -142,7 +142,7 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
         end
 
 let _ =
-  Eliom_registration.Html5.register service_create_new_user
+  Eliom_registration.Html.register service_create_new_user
     (fun () (login, (passwd, (passwd2, (real_name, email))))  ->
        Session.with_user_login
          (fun cur_user ->
@@ -157,29 +157,29 @@ let _ =
 let save_user_prefs c_passwd c_passwd2 (c_name,old_name) (c_email,old_email) =
   (table
      [tr
-        [td [pcdata "New Password:"];
-         td [string_input ~input_type:`Password ~name:c_passwd ()];
+        [td [txt "New Password:"];
+         td [input ~input_type:`Password ~name:c_passwd Form.string];
         ];
       tr
-        [td [pcdata "Re-type Password:"];
-         td [string_input ~input_type:`Password ~name:c_passwd2 ()]];
+        [td [txt "Re-type Password:"];
+         td [input ~input_type:`Password ~name:c_passwd2 Form.string]];
 
       tr 
-        [td [pcdata "Name:"];
-         td [string_input ~input_type:`Text ~name:c_name
-               ~value:old_name ()]];
+        [td [txt "Name:"];
+         td [input ~input_type:`Text ~name:c_name
+               ~value:old_name Form.string]];
 
       tr 
-        [td [pcdata "E-mail Address:"];
-         td [string_input ~input_type:`Text ~name:c_email
-               ~value:old_email ()]];
+        [td [txt "E-mail Address:"];
+         td [input ~input_type:`Text ~name:c_email
+               ~value:old_email Form.string]];
 
       tr
-        [td [string_input ~input_type:`Submit ~value:"Save User" ()]]
+        [td [input ~input_type:`Submit ~value:"Save User" Form.string]]
         ])
 
 let _ =
-  Eliom_registration.Html5.register user_admin_page
+  Eliom_registration.Html.register user_admin_page
     (fun _ () ->
        Session.with_user_login
          (fun cur_user ->
@@ -192,11 +192,11 @@ let _ =
 let rec view_edit_user_page caller ~err ~cur_user user_to_edit =
   Html_util.html_stub
     (Html_util.navbar_html ~cur_user
-       ([h1 [pcdata "Edit User"]] @
+       ([h1 [txt "Edit User"]] @
           err @
           [post_form ~service:service_save_user_edit
              (fun (passwd,(passwd2,(name,email))) ->
-                [h2 [pcdata ("Edit User '"^user_to_edit.user_login^"'")];
+                [h2 [txt ("Edit User '"^user_to_edit.user_login^"'")];
                  save_user_prefs passwd passwd2 
                    (name,user_to_edit.user_real_name) 
                    (email,user_to_edit.user_email)]) 
@@ -204,7 +204,7 @@ let rec view_edit_user_page caller ~err ~cur_user user_to_edit =
 
 
 let _ =
-  Eliom_registration.Html5.register service_save_user_edit
+  Eliom_registration.Html.register service_save_user_edit
     (fun (caller, login) (passwd, (passwd2, (real_name, email)))  ->
        Session.with_user_login
          (fun cur_user ->
@@ -243,7 +243,7 @@ let _ =
 
 
 let _ =
-  Eliom_registration.Html5.register edit_user_page
+  Eliom_registration.Html.register edit_user_page
     (fun (caller, editing_login) () ->
        Session.with_user_login
          (fun cur_user ->

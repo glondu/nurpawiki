@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>. 
  *)
 
-open Eliom_content.Html5.F
+open Eliom_content.Html.F
 
 open Lwt
 
@@ -22,19 +22,19 @@ open Services
 open Types
 
 let about_page_html =
-  [h1 [pcdata "About Nurpawiki"];
+  [h1 [txt "About Nurpawiki"];
    p 
-     [pcdata ("Nurpawiki v"^Version.version^
+     [txt ("Nurpawiki v"^Version.version^
                 " Copyright (c) 2007, 2008 Janne Hellsten <jjhellst@gmail.com>");
       br ();
       br ();
-      pcdata "See the ";
+      txt "See the ";
       Raw.a ~a:[a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki"))]
-        [pcdata "project homepage"];
-      pcdata "."]]
+        [txt "project homepage"];
+      txt "."]]
 
 let _ =
-  Eliom_registration.Html5.register about_page
+  Eliom_registration.Html.register about_page
     (fun () () ->
        Session.with_guest_login
          (fun cur_user ->
