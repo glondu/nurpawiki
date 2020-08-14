@@ -29,7 +29,7 @@ open Types
 module Db = Database
 
 let revision_table page_descr =
-  lwt revisions = Db.query_page_revisions page_descr in
+  let%lwt revisions = Db.query_page_revisions page_descr in
 
   let page_link descr (rev:int) = 
     a ~service:wiki_view_page [pcdata ("Revision "^(string_of_int rev))]

@@ -46,7 +46,7 @@ let service_save_user_edit =
 
 
 let rec view_user_admin_page ~err ~cur_user =
-  lwt users = Db.query_users () in
+  let%lwt users = Db.query_users () in
   let users_table = 
     table @@
       (tr 

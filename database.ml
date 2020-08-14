@@ -202,7 +202,7 @@ let query_todo id = with_conn (fun conn ->
 )
 
 let todo_exists id =
-  match_lwt query_todo id with Some _ -> Lwt.return true | None -> Lwt.return false
+  match%lwt query_todo id with Some _ -> Lwt.return true | None -> Lwt.return false
 
 let update_todo_activation_date todo_id new_date = with_conn (fun conn ->
   let sql = 

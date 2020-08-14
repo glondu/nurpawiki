@@ -100,11 +100,11 @@ let view_scheduler_page ~cur_user =
       else (* Query this users's tasks only: *)
         Database.query_upcoming_todos ~current_user_id:(Some cur_user.user_id) in
 
-    lwt upcoming_pending = query_todos (None,None) in
-    lwt upcoming_tomorrow = query_todos (None,Some 1) in
-    lwt upcoming_todos_7_days = query_todos (Some 1,Some 7) in
-    lwt upcoming_todos_14_days = query_todos (Some 7, Some 14) in
-    lwt upcoming_all = query_todos (Some 14, None) in
+    let%lwt upcoming_pending = query_todos (None,None) in
+    let%lwt upcoming_tomorrow = query_todos (None,Some 1) in
+    let%lwt upcoming_todos_7_days = query_todos (Some 1,Some 7) in
+    let%lwt upcoming_todos_14_days = query_todos (Some 7, Some 14) in
+    let%lwt upcoming_all = query_todos (Some 14, None) in
 
     let mark_todo_hdr h = List.map (fun e -> (h, e)) in
     let merged_todos = 
@@ -114,7 +114,7 @@ let view_scheduler_page ~cur_user =
         (mark_todo_hdr "Next 2 weeks" upcoming_todos_14_days) @
         (mark_todo_hdr "Everything else" upcoming_all) in
 
-    lwt todos_in_pages =
+    let%lwt todos_in_pages =
       Database.todos_in_pages (List.map (fun (_,todo) -> todo.t_id) merged_todos) in
 
     (* TODO merge this HTML generation with other pages.  PROBLEM:
@@ -189,21 +189,21 @@ let service_save_todo_item =
              for these DB operations. *)
           Lwt_list.iter_s
             (fun (todo_id, (activation_date, (descr, owner_id))) ->
-               Database.update_todo_descr todo_id descr >>
+               Database.update_todo_descr todo_id descr;%lwt
                let owner_id_opt =
                  if owner_id = "" then None else Some (int_of_string owner_id) in
-               Database.update_todo_owner_id todo_id owner_id_opt >>
+               Database.update_todo_owner_id todo_id owner_id_opt;%lwt
                Database.update_todo_activation_date todo_id activation_date)
-            todos >>
+            todos;%lwt
           render_edit_todo_cont_page ~cur_user src_page_cont))
 
 let rec render_todo_editor ~cur_user (src_page_cont, todos_to_edit) =
-  lwt users = Database.query_users () in
+  let%lwt users = Database.query_users () in
   let todos_str = String.concat "," (List.map string_of_int todos_to_edit) in
-  lwt todos = Database.query_todos_by_ids todos_to_edit in
+  let%lwt todos = Database.query_todos_by_ids todos_to_edit in
   
-  lwt f =
-    lwt todo_in_pages =
+  let%lwt f =
+    let%lwt todo_in_pages =
       Database.todos_in_pages (List.map (fun todo -> todo.t_id) todos) in
 
     let cancel_page cont = 

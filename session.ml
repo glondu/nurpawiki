@@ -125,11 +125,11 @@ let login_html ~err =
 let with_db_installed f =
   (* Check if the DB is installed.  If so, check that it doesn't need
      an upgrade. *)
-  lwt b = Dbu.is_schema_installed () in
+  let%lwt b = Dbu.is_schema_installed () in
   if not b then
     return (Html_util.html_stub (db_installation_error ()))
   else
-    lwt v = Dbu.db_schema_version () in
+    let%lwt v = Dbu.db_schema_version () in
     if v < Db.nurpawiki_schema_version then
       return (Html_util.html_stub (db_upgrade_warning ()))
     else f ()
@@ -188,7 +188,7 @@ let with_guest_login f =
    there are any errors, just bail out without doing anything
    harmful. *)
 let action_with_user_login f =
-  lwt db_version = Dbu.db_schema_version () in
+  let%lwt db_version = Dbu.db_schema_version () in
   if db_version = Db.nurpawiki_schema_version then
     get_login_user ()
     >>= function
@@ -246,7 +246,7 @@ let () =
 let _ =
   Eliom_registration.Html5.register schema_install_page
     (fun () () ->
-       Database_schema.install_schema () >>
+       Database_schema.install_schema ();%lwt
        return
          (Html_util.html_stub
             [h1 [pcdata "Database installation completed"];
@@ -257,7 +257,7 @@ let _ =
 let _ =
   Eliom_registration.Html5.register upgrade_page
     (fun () () ->
-       lwt msg = Dbu.upgrade_schema () in
+       let%lwt msg = Dbu.upgrade_schema () in
        return
          (Html_util.html_stub
             [h1 [pcdata "Upgrade DB schema"];

@@ -1,4 +1,4 @@
-LIB := -syntax camlp4o -package threads,netstring,calendar,extlib,postgresql,eliom.server,lwt.syntax
+LIB := -package threads,netstring,calendar,extlib,postgresql,eliom.server,lwt_ppx
 CAMLC := ocamlfind ocamlc -thread -g $(LIB)
 CAMLOPT := ocamlfind ocamlopt -thread  $(LIB)
 CAMLDOC := ocamlfind ocamldoc $(LIB)

@@ -41,8 +41,8 @@ let ( & ) f g = f g
 let rec filter_map f = function
   | [] -> return []
   | x::xs ->
-    lwt ys = filter_map f xs in
-    match_lwt f x with
+    let%lwt ys = filter_map f xs in
+    match%lwt f x with
       | Some y -> return & y::ys
       | None -> return ys
 
@@ -51,10 +51,10 @@ let newline_re = Pcre.regexp "\n"
 let task_side_effect_complete task_id () =
   Session.action_with_user_login
     (fun user ->
-      lwt b = Privileges.can_complete_task task_id user in
+      let%lwt b = Privileges.can_complete_task task_id user in
       if b then
         begin
-          Db.complete_task ~user_id:user.user_id task_id >>
+          Db.complete_task ~user_id:user.user_id task_id;%lwt
           let table = Eliom_request_info.get_request_cache () in
           return & Polytables.set ~table ~key:action_completed_task ~value:task_id
         end
@@ -64,20 +64,20 @@ let task_side_effect_complete task_id () =
 let task_side_effect_undo_complete task_id () =
   Session.action_with_user_login
     (fun user ->
-      lwt b = Privileges.can_complete_task task_id user in
+      let%lwt b = Privileges.can_complete_task task_id user in
       if b then Db.uncomplete_task ~user_id:user.user_id task_id
       else return ())
 
 let task_side_effect_mod_priority (task_id, dir) () =
   Session.action_with_user_login
     (fun user ->
-      lwt b = Privileges.can_modify_task_priority task_id user in
+      let%lwt b = Privileges.can_modify_task_priority task_id user in
       if b then
         begin
           if dir = false then
             Db.down_task_priority task_id
           else
-            Db.up_task_priority task_id >>
+            Db.up_task_priority task_id;%lwt
           let table = Eliom_request_info.get_request_cache () in
           return & Polytables.set ~table ~key:action_task_priority_changed ~value:task_id
         end
@@ -251,7 +251,7 @@ module WikiML =
             ~src:(make_static_uri ["external_link.png"]) () in
         if scheme = "wiki" || scheme = "" then
           let t = if text = "" then page else text in
-          lwt b = Db.wiki_page_exists page in
+          let%lwt b = Db.wiki_page_exists page in
           if b then
             a wiki_view_page [pcdata t] (page, (None, (None, None))) |> return
           else 
@@ -333,21 +333,21 @@ module WikiML =
                        let s = String.sub m 1 (String.length m - 1) in
                        loop (add_html acc (pcdata s)) (charpos+(String.length m))
                      else
-                       lwt h = wikilink "" m m in
+                       let%lwt h = wikilink "" m m in
                        loop (add_html acc h) (charpos+fmlen)));
                  (wikilinkanum_re, 
                   (fun fmlen r ->
                      let scheme = r.(2) in
                      let page = r.(3) in
                      let text = r.(4) in
-                     lwt h = wikilink scheme page text in
+                     let%lwt h = wikilink scheme page text in
                      loop (add_html acc h) (charpos+fmlen)));
                  (wikilinkanum_no_text_re,
                   (fun fmlen r ->
                      let scheme = r.(2) in
                      let page = r.(3) in
                      let text = "" in
-                     lwt h = wikilink scheme page text in
+                     let%lwt h = wikilink scheme page text in
                      loop (add_html acc h) (charpos+fmlen)));
                  (italic_re,
                   (fun fmlen r ->
@@ -381,7 +381,7 @@ module WikiML =
               (* Grab all lines starting with '*': *)
               let (after_bullets,bullets) =
                 take_while is_list_or_empty lst in
-              lwt list_items =
+              let%lwt list_items =
                 filter_map
                   (function 
                        (`Wiki e) as wl ->
@@ -393,7 +393,7 @@ module WikiML =
                              match is_list wl with
                                Some r ->
                                  let n_stars = String.length r.(1) in
-                                 lwt x = parse_text [] r.(2) in
+                                 let%lwt x = parse_text [] r.(2) in
                                  return & Some (n_stars, x)
                              | None ->
                                  assert false
@@ -412,7 +412,7 @@ module WikiML =
               match pcre_first_match x 0 wiki_pats with
                 Some (res, action) -> action res
               | None ->
-                  lwt x = parse_text [] x in
+                  let%lwt x = parse_text [] x in
                   loop ((p x)::acc) xs
             end
         | (`NoWiki x::xs) ->
@@ -424,7 +424,7 @@ module WikiML =
   end
 
 let load_wiki_page ~revision_id page_id =
-  lwt page = Db.load_wiki_page ~revision_id page_id in
+  let%lwt page = Db.load_wiki_page ~revision_id page_id in
   Pcre.split ~rex:newline_re page |> WikiML.preprocess |> return
 
 let wikiml_to_html ~cur_user (page_id:int) (page_name:string) ~revision_id todo_data =
@@ -433,7 +433,7 @@ let wikiml_to_html ~cur_user (page_id:int) (page_name:string) ~revision_id todo_
 
 let todo_list_table_html ~cur_user cur_page todos =
   (* Which pages contain TODOs, mapping from todo_id -> {pages} *)
-  lwt todo_in_pages =
+  let%lwt todo_in_pages =
     Db.todos_in_pages (List.map (fun todo -> todo.t_id) todos) in
   let todo_page_link todo =
     let descr = todo.t_descr in
@@ -487,8 +487,8 @@ let wiki_page_menu_html ~cur_user page content =
      br (); br ()] in
 
   let current_user_id = Some cur_user.user_id in
-  lwt todo_list =
-    lwt x = Db.query_all_active_todos ~current_user_id () in
+  let%lwt todo_list =
+    let%lwt x = Db.query_all_active_todos ~current_user_id () in
     todo_list_table_html ~cur_user page x
   in
 
@@ -510,17 +510,17 @@ let wiki_page_menu_html ~cur_user page content =
     ~todo_list_table:[todo_list] content
 
 let wiki_page_contents_html ~cur_user ~revision_id page_id page_name todo_data ?(content=[]) () =
-  lwt h = wikiml_to_html ~cur_user ~revision_id page_id page_name todo_data in
+  let%lwt h = wikiml_to_html ~cur_user ~revision_id page_id page_name todo_data in
   wiki_page_menu_html ~cur_user page_name (content @ h)
 
 let view_page ~cur_user ?(revision_id=None) page_id page_name ~printable =
-  lwt todos = Db.query_page_todos page_id in
+  let%lwt todos = Db.query_page_todos page_id in
   if printable <> None && Option.get printable = true then
-    lwt page_content =
+    let%lwt page_content =
       wikiml_to_html ~cur_user page_id page_name ~revision_id todos in
     return & Html_util.html_stub page_content
   else 
-    lwt page_content =
+    let%lwt page_content =
       (wiki_page_contents_html 
          ~cur_user 
          page_id page_name ~revision_id todos ())
@@ -561,7 +561,7 @@ let check_new_and_removed_todos ~cur_user page_id lines =
 
   (* Query todos that reside on this page.  Don't update DB for todos
      that did NOT change *)
-  lwt todos_on_page = Db.query_page_todos page_id in
+  let%lwt todos_on_page = Db.query_page_todos page_id in
 
   let completed_re = Pcre.regexp "^\\s*\\(x\\) (.*)$" in
   let remove_ws_re = Pcre.regexp "^\\s*(.*)$" in
@@ -588,7 +588,7 @@ let check_new_and_removed_todos ~cur_user page_id lines =
                          (* Resurrect completed task *)
                          if todo.t_completed then
                            Db.uncomplete_task ~user_id:cur_user.user_id id
-                         else return () >>
+                         else return ();%lwt
                          if todo.t_descr <> new_descr then
                            Db.update_todo_descr id new_descr
                          else return ()
@@ -598,12 +598,12 @@ let check_new_and_removed_todos ~cur_user page_id lines =
                            return ()
                      end
                  | None -> return ()))
-       | None -> return ())  page_todos;
+       | None -> return ())  page_todos;%lwt
   
   filter_map
     (fun e -> 
        let id = int_of_string (fst e) in
-       lwt b = Db.todo_exists id in
+       let%lwt b = Db.todo_exists id in
        if b then return & Some id else return & None) page_todos >>=
     (* Update DB "todos in pages" relation *)
     Db.update_page_todos page_id
@@ -642,16 +642,16 @@ let service_save_page_post =
                updated DB page mappings accordingly: *)
             let wikitext = Pcre.split ~rex:newline_re value |> WikiML.preprocess in
             let user_id = cur_user.user_id in
-            lwt page_id = Db.page_id_of_page_name page in
-            check_new_and_removed_todos ~cur_user page_id wikitext >>
+            let%lwt page_id = Db.page_id_of_page_name page in
+            check_new_and_removed_todos ~cur_user page_id wikitext;%lwt
             (* Convert [todo Description] items into [todo:ID] format, save
                descriptions to database and save the wiki page contents. *)
-            lwt wiki_plaintext =
+            let%lwt wiki_plaintext =
               convert_new_todo_items cur_user page_id wikitext >>=
                 wrap1 WikiML.wikitext_of_preprocessed_lines in
             (* Log activity: *)
-            Db.insert_save_page_activity ~user_id page_id >>
-            Db.save_wiki_page page_id ~user_id wiki_plaintext >>
+            Db.insert_save_page_activity ~user_id page_id;%lwt
+            Db.save_wiki_page page_id ~user_id wiki_plaintext;%lwt
             view_page ~cur_user page_id page ~printable:(Some false)))
 
 (* Convert [todo:ID] into [todo:ID 'Description'] before going into
@@ -677,19 +677,19 @@ let annotate_old_todo_items page page_todos (lines : WikiML.preproc_line list) =
 (* /edit?p=Page *)
 let _ =
   let handle_edit ~cur_user page_name =
-    lwt (page_id, page_todos, preproc_wikitext) =
-      lwt b = Db.wiki_page_exists page_name in
+    let%lwt (page_id, page_todos, preproc_wikitext) =
+      let%lwt b = Db.wiki_page_exists page_name in
       if b then
-        lwt page_id = Db.page_id_of_page_name page_name in
-        lwt current_page_todos = Db.query_page_todos page_id in
-        lwt x = load_wiki_page page_id ~revision_id:None in
+        let%lwt page_id = Db.page_id_of_page_name page_name in
+        let%lwt current_page_todos = Db.query_page_todos page_id in
+        let%lwt x = load_wiki_page page_id ~revision_id:None in
         return &
         (page_id,
          current_page_todos,
          annotate_old_todo_items page_name current_page_todos x)
       else
         begin
-          lwt x = Db.new_wiki_page ~user_id:cur_user.user_id page_name in
+          let%lwt x = Db.new_wiki_page ~user_id:cur_user.user_id page_name in
           return (x, IMap.empty, [])
         end in
     let wikitext = 
@@ -704,7 +704,7 @@ let _ =
                 textarea ~name:chain ~a:[a_rows 30; a_cols 80]
                   ~value:wikitext ()])])
         (page_name,(None,(None,None))) in
-    lwt h =
+    let%lwt h =
       wiki_page_contents_html ~cur_user
          ~revision_id:None
          page_id page_name page_todos ~content:[f] () in
@@ -719,13 +719,13 @@ let _ =
 
 
 let view_wiki_page ~cur_user (page_name, (printable, (revision_id, _))) =
-  match_lwt Db.find_page_id page_name with
+  match%lwt Db.find_page_id page_name with
     Some page_id ->
       view_page ~cur_user ~revision_id page_id page_name ~printable
   | None ->
       let f = 
         a wiki_edit_page [pcdata "Create new page"] page_name in
-      lwt h = wiki_page_menu_html ~cur_user page_name [f] in
+      let%lwt h = wiki_page_menu_html ~cur_user page_name [f] in
       return & Html_util.html_stub h
 
 (* /view?p=Page *)
@@ -799,7 +799,7 @@ let _ =
                       html_of_headline sr.sr_headline)]
             | SR_todo -> assert false) search_results) in
   let gen_search_page ~cur_user search_str =
-    lwt search_results = Db.search_wikipage search_str in
+    let%lwt search_results = Db.search_wikipage search_str in
     return
       (Html_util.html_stub
          (Html_util.navbar_html ~cur_user

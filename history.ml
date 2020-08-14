@@ -133,14 +133,14 @@ let page_links cur_page max_pages =
   pcdata "More pages: " :: List.rev !links
 
 let view_history_page ~cur_user ~nth_page =
-  lwt highest_log_id = Database.query_highest_activity_id () in
+  let%lwt highest_log_id = Database.query_highest_activity_id () in
   (* max_id is inclusive, min_id exclusive, hence 1 and 0 *)
   let max_id = max 1 (highest_log_id - nth_page * n_log_items_per_page) in
   let min_id = max 0 (max_id - n_log_items_per_page) in
   let n_total_pages = highest_log_id / n_log_items_per_page in
-  lwt activity =
+  let%lwt activity =
     Database.query_past_activity ~min_id ~max_id in
-  lwt activity_in_pages =
+  let%lwt activity_in_pages =
     Database.query_activity_in_pages ~min_id ~max_id in
 
   let prettify_date d =
