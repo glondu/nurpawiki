@@ -51,8 +51,6 @@ SELECT page_id, ts_headline(page_text, q), ts_rank(page_searchv, q) FROM wikitex
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
-
 CREATE TABLE activity_in_pages (
     activity_log_id bigint NOT NULL,
     page_id bigint NOT NULL
@@ -89,11 +87,6 @@ CREATE SEQUENCE pages_id_seq
 
 
 ALTER SEQUENCE pages_id_seq OWNED BY pages.id;
-
-SET default_with_oids = true;
-
-
-SET default_with_oids = false;
 
 CREATE TABLE todos (
     id integer NOT NULL,
