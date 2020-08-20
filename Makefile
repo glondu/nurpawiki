@@ -28,7 +28,6 @@ $(CMXS): src/version.ml
 NWIKI_VER=$(shell cat VERSION)
 
 src/version.ml: src/version.ml.in VERSION
-	echo $(NWIKI_VER)
 	sed -e "s|%_NURPAWIKI_VERSION_%|$(NWIKI_VER)|g" $< > $@
 
 META: META.in VERSION
