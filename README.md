@@ -9,6 +9,14 @@ combines a wiki, a to-do list and a simple scheduler to help you get
 organized.  It aims to ease note taking and action planning.  Actions
 (to-dos) are always associated with notes or plans (wiki pages).
 
+Read about [its history](doc/History.md).
+
+Get started!
+------------
+
+ * [Installation](doc/Installation.md)
+ * [Tutorial](doc/Tutorial.md)
+
 Development
 -----------
 
