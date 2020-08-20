@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 module OrdInt = struct type t = int let compare a b = compare a b end
@@ -21,7 +21,7 @@ module IMap = Map.Make (OrdInt)
 let action_completed_task : int Polytables.key = Polytables.make_key ()
 let action_task_priority_changed : int Polytables.key = Polytables.make_key ()
 
-type user = 
+type user =
     {
       user_id : int;
       user_login : string;
@@ -30,7 +30,7 @@ type user =
       user_email : string;
     }
 
-type todo = 
+type todo =
     {
       t_id : int;
       t_descr : string;
@@ -39,13 +39,13 @@ type todo =
       t_activation_date : string;
       t_owner : owner option;
     }
-and owner = 
+and owner =
     {
       owner_id : int;
       owner_login : string;
     }
 
-type page = 
+type page =
     {
       p_id : int;
       p_descr : string;
@@ -59,7 +59,7 @@ type page_revision =
       pr_owner_login : string option;
     }
 
-type activity_type = 
+type activity_type =
     AT_create_todo
   | AT_complete_todo
   | AT_work_on_todo
@@ -86,7 +86,7 @@ type search_result =
       sr_page_descr : string option;
     }
 
-type et_cont = 
+type et_cont =
     ET_scheduler
   | ET_view of string
 
@@ -99,13 +99,13 @@ let string_of_et_cont = function
 let match_pcre_option rex s =
   try Some (Pcre.extract ~rex s) with Not_found -> None
 
-let et_cont_of_string s = 
+let et_cont_of_string s =
   if s = "s" then
     ET_scheduler
-  else 
+  else
     begin
       match match_pcre_option et_cont_view_re s with
-        None -> 
+        None ->
           raise (Failure "et_cont_of_string")
       | Some s ->
           ET_view s.(1)

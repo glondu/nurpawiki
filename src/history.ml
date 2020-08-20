@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 module P = Printf
@@ -44,7 +44,7 @@ let descr_of_activity_type = function
   | AT_edit_page -> "Edited"
   | AT_uncomplete_todo -> "Resurrected"
 
-module ReverseOrdString = 
+module ReverseOrdString =
   struct
     type t = String.t
     let compare a b = String.compare b a
@@ -52,7 +52,7 @@ module ReverseOrdString =
 
 module RSMap = Map.Make (ReverseOrdString)
 
-type act_group = 
+type act_group =
     {
       ag_created_todos : (string * string * page list) list;
       ag_completed_todos : (string * string * page list) list;
@@ -61,7 +61,7 @@ type act_group =
       ag_page_editors : string list;
     }
 
-let empty_act_group = 
+let empty_act_group =
   {
       ag_created_todos = [];
       ag_completed_todos = [];
@@ -78,7 +78,7 @@ let group_activities activities activity_in_pages =
         let ag = try RSMap.find d acc with Not_found -> empty_act_group in
         let pages = try IMap.find a.a_id activity_in_pages with Not_found -> [] in
         let opt_to_str o = Option.default "" o in
-        let ag' = 
+        let ag' =
           let changed_by = opt_to_str a.a_changed_by in
           match a.a_activity with
             AT_create_todo ->
@@ -102,20 +102,20 @@ let group_activities activities activity_in_pages =
           | AT_create_page | AT_edit_page ->
               let add_editor e acc =
                 if List.mem e acc then acc else e::acc in
-              { ag with 
+              { ag with
                   ag_page_editors = add_editor changed_by ag.ag_page_editors;
                   ag_edited_pages = pages @ ag.ag_edited_pages }
           | AT_work_on_todo -> ag in
         RSMap.add d ag' acc)
     RSMap.empty activities
 
-let remove_duplicates strs = 
-  let module PSet = 
+let remove_duplicates strs =
+  let module PSet =
     Set.Make (struct
-                type t = page 
+                type t = page
                 let compare a b =  compare a.p_descr b.p_descr
               end) in
-  let s = 
+  let s =
     List.fold_left (fun acc e -> PSet.add e acc) PSet.empty strs in
   PSet.fold (fun e acc -> e::acc) s []
 
@@ -123,12 +123,12 @@ let page_links cur_page max_pages =
   let links = ref [] in
   for i = 0 to max_pages do
     let p = string_of_int i in
-    let link = 
+    let link =
       if cur_page = i then
         strong [txt p]
-      else 
+      else
         a ~service:history_page [txt p] (Some i) in
-    links := link :: txt " " :: !links 
+    links := link :: txt " " :: !links
   done;
   txt "More pages: " :: List.rev !links
 
@@ -149,24 +149,24 @@ let view_history_page ~cur_user ~nth_page =
 
   let activity_groups = group_activities activity activity_in_pages in
 
-  let act_table = 
+  let act_table =
     table ~a:[a_class ["todo_table"]] @@
       (tr [th [];
            th [txt "Activity"];
            th [txt "By"];
            th [txt "Details"]]) ::
       (List.rev
-         (fst 
+         (fst
             (RSMap.fold
                (fun date e (lst_acc,prev_date) ->
                   let prettified_date = prettify_date date in
                   let date_text =
                     if prev_date = prettified_date then
                       []
-                    else 
+                    else
                       [txt prettified_date] in
 
-                  let todo_html ty lst = 
+                  let todo_html ty lst =
                     List.rev
                       (List.mapi
                          (fun ndx (todo,changed_by,pages) ->
@@ -178,13 +178,13 @@ let view_history_page ~cur_user ~nth_page =
                                            ~colorize:true pages))]))
                          lst) in
 
-                  let created_todos = 
+                  let created_todos =
                     todo_html "Created" e.ag_created_todos in
-                  let completed_todos = 
+                  let completed_todos =
                     todo_html "Completed" e.ag_completed_todos in
-                  let resurrected_todos = 
+                  let resurrected_todos =
                     todo_html "Resurrected" e.ag_resurrected_todos in
-                  let pages_html = 
+                  let pages_html =
                     if e.ag_edited_pages <> [] then
                       [tr [td [];
                            td [txt "Edited"];
@@ -194,9 +194,9 @@ let view_history_page ~cur_user ~nth_page =
                            td (Html_util.todo_page_links_of_pages
                                  ~colorize:true ~insert_parens:false
                                  (remove_duplicates e.ag_edited_pages))]]
-                    else 
+                    else
                       [] in
-                  
+
                   (* NOTE: 'tr' comes last as we're building the page
                      in reverse order *)
                   (pages_html @ created_todos @ completed_todos @ resurrected_todos @
@@ -205,7 +205,7 @@ let view_history_page ~cur_user ~nth_page =
                activity_groups ([],"")))) in
   return & Html_util.html_stub
     (Html_util.navbar_html ~cur_user
-       ([h1 [txt "Blast from the past"]] @ 
+       ([h1 [txt "Blast from the past"]] @
           (page_links nth_page n_total_pages) @ [br (); br ()] @
           [act_table]))
 

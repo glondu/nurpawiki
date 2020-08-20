@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 open Eliom_content.Html.F
@@ -34,9 +34,9 @@ let disconnect_box s =
 
 (* Use this as the basis for all pages.  Includes CSS etc. *)
 let html_stub ?(javascript=[]) body_html =
-  let script src = 
+  let script src =
     js_script ~a:[a_defer ()] ~uri:(make_static_uri src) () in
-  let scripts  = 
+  let scripts  =
     script ["nurpawiki.js"] :: (List.map script javascript) in
   html ~a:[a_xmlns `W3_org_1999_xhtml]
     (head
@@ -48,12 +48,12 @@ let html_stub ?(javascript=[]) body_html =
                                   ["jscalendar"; "calendar-blue2.css"]) ()]))
     (body body_html)
 
-let is_guest user = 
+let is_guest user =
   user.user_login = "guest"
 
 let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_page_links=[]) ?(todo_list_table=[]) content =
   let home_link link_text =
-    a ~service:wiki_view_page 
+    a ~service:wiki_view_page
       ~a:[a_accesskey 'h'; a_class ["ak"]] link_text
       (Config.site.cfg_homepage, (None, (None, None))) in
   let scheduler_link =
@@ -74,7 +74,7 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
               input ~input_type:`Text ~name:chain Form.string]])] in
 
   (* Greet user and offer Login link if guest *)
-  let user_greeting = 
+  let user_greeting =
     txt ("Howdy "^cur_user.user_login^"!  ") ::
       if is_guest cur_user then
         [br(); br ();
@@ -85,23 +85,23 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
          txt ".";
          br (); br ();
          txt "Guests cannot modify the site.  Ask the site admin for an account to be able to edit content."]
-      else 
+      else
         [] in
 
   let disconnect_link =
     if is_guest cur_user then [] else [disconnect_box "Logout"] in
 
   let my_preferences_link =
-    if is_guest cur_user then 
-      [] 
-    else 
+    if is_guest cur_user then
+      []
+    else
       [a ~service:edit_user_page [txt "My Preferences"]
          (None,cur_user.user_login)] in
 
-  let edit_users_link = 
+  let edit_users_link =
     if Privileges.can_view_users cur_user then
       [a ~service:user_admin_page [txt "Edit Users"] ()]
-    else 
+    else
       [] in
 
   [div ~a:[a_id "topbar"]
@@ -132,7 +132,7 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
      div ~a:[a_id "content"]
        content]
 
-let error text = 
+let error text =
   span ~a:[a_class ["error"]] [txt text]
 
 let error_page msg =
@@ -151,17 +151,17 @@ let priority_css_class p =
 
 (* Hash page description to a CSS palette entry.  Used to syntax
    highlight wiki page links based on their names. *)
-let css_palette_ndx_of_wikipage page_id = 
+let css_palette_ndx_of_wikipage page_id =
   "palette"^(string_of_int (page_id mod 12))
 
 let todo_page_links_of_pages ?(colorize=false) ?(link_css_class=None) ?(insert_parens=true) pages =
-  let attrs page = 
-    let color_css = 
+  let attrs page =
+    let color_css =
       if colorize then [css_palette_ndx_of_wikipage page.p_id] else [] in
     match link_css_class with
       Some c -> [a_class ([c] @ color_css)]
     | None -> [a_class color_css] in
-  let link page = 
+  let link page =
     a ~a:(attrs page) ~service:wiki_view_page [txt page.p_descr]
       (page.p_descr,(None,(None,None))) in
   let rec insert_commas acc = function
@@ -170,13 +170,13 @@ let todo_page_links_of_pages ?(colorize=false) ?(link_css_class=None) ?(insert_p
     | x::[] ->
         insert_commas (x::acc) []
     | [] -> List.rev acc in
-  let insert_parens_html lst = 
+  let insert_parens_html lst =
     txt " ("::lst @ [txt ")"] in
   if pages <> [] then
     let lst = insert_commas [] (List.map link pages) in
-    if insert_parens then 
+    if insert_parens then
       insert_parens_html lst
-    else 
+    else
       lst
   else
     []
@@ -187,27 +187,27 @@ let todo_page_links todo_in_pages ?(colorize=false) ?(link_css_class=None) ?(ins
 
 let todo_edit_img_link page_cont task_id =
   [a ~a:[a_title "Edit"] ~service:edit_todo_get_page
-     [img ~alt:"Edit" 
+     [img ~alt:"Edit"
         ~src:(make_static_uri ["edit_small.png"]) ()]
      (page_cont, Some task_id)]
 
 let complete_task_img_link task_id =
-  let img_html = 
-    [img ~alt:"Mark complete" 
+  let img_html =
+    [img ~alt:"Mark complete"
        ~src:(make_static_uri ["mark_complete.png"]) ()] in
   a ~service:task_side_effect_complete_action
     ~a:[a_title "Mark as completed!"] img_html task_id
 
-let todo_descr_html descr owner = 
+let todo_descr_html descr owner =
   match owner with
     None -> [txt descr]
   | Some o ->
-      [txt descr; 
+      [txt descr;
        span ~a:[a_class ["todo_owner"]] [txt (" ["^o.owner_login^"] ")]]
 
 
 (* Use to create a "cancel" button for user submits *)
 let cancel_link service params =
   a ~a:[a_class ["cancel_edit"]] ~service:service
-    [txt "Cancel"] 
+    [txt "Cancel"]
     params

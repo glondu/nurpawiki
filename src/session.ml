@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 open Lwt
@@ -52,15 +52,15 @@ let upgrade_page = create ~path:(Path ["upgrade"]) ~meth:(Get unit) ()
 
 let schema_install_page = create ~path:(Path ["schema_install"]) ~meth:(Get unit) ()
 
-let connect_action = 
+let connect_action =
   create ~path:No_path
     ~meth:(Post (unit, (string "login") ** (string "passwd")))
     ()
-    
 
-let link_to_nurpawiki_main sp = 
+
+let link_to_nurpawiki_main sp =
   a ~service:wiki_view_page
-    [txt "Take me to Nurpawiki"] 
+    [txt "Take me to Nurpawiki"]
     (Config.site.cfg_homepage,(None,(None,None)))
 
 (* Get logged in user as an option *)
@@ -93,11 +93,11 @@ let db_installation_error () =
          txt "In order to complete Nurpawiki installation, your Nurpawiki database schema needs to be initialized."];
       p [txt "Follow this link to complete installation:"; br (); br ();
          a ~service:schema_install_page [txt "Install schema!"] ()]]]
-     
+
 
 let login_html ~err =
-  let help_text = 
-    [br (); br (); 
+  let help_text =
+    [br (); br ();
      strong [txt "Please read "];
      Raw.a ~a:[a_id "login_help_url"; a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki/wiki/Tutorial"))] [txt "Nurpawiki tutorial"];
      txt " if you're logging in for the first time.";
@@ -161,7 +161,7 @@ let with_user_login ?(allow_read_only=false) f =
           end
       | None ->
           if allow_read_only && Config.site.cfg_allow_ro_guests then
-            let guest_user = 
+            let guest_user =
               {
                 user_id = 0;
                 user_login = "guest";
@@ -170,14 +170,14 @@ let with_user_login ?(allow_read_only=false) f =
                 user_email = "";
               } in
             f guest_user
-          else 
+          else
             return (login_html [])
   in
   with_db_installed login
 
 (* Either pretend to be logged in as 'guest' (if allowed by config
    options) or require a proper login.
-   
+
    If logging in as 'guest', we setup a dummy user 'guest' that is not
    a real user.  It won't have access to write to any tables. *)
 let with_guest_login f =

@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 open Lwt
@@ -25,11 +25,11 @@ open Types
 
 module Db = Database
 
-let service_create_new_user = 
+let service_create_new_user =
   create_attached_post
     ~fallback:user_admin_page
-    ~post_params:((string "login") ** 
-                    (string "pass") ** 
+    ~post_params:((string "login") **
+                    (string "pass") **
                     (string "pass2") **  (* re-type *)
                     (string "name") **
                     (string "email"))
@@ -38,7 +38,7 @@ let service_create_new_user =
 let service_save_user_edit =
   create_attached_post
     ~fallback:edit_user_page
-    ~post_params:((string "pass") ** 
+    ~post_params:((string "pass") **
                     (string "pass2") **  (* re-type *)
                     (string "name") **
                     (string "email"))
@@ -47,16 +47,16 @@ let service_save_user_edit =
 
 let rec view_user_admin_page ~err ~cur_user =
   let%lwt users = Db.query_users () in
-  let users_table = 
+  let users_table =
     table @@
-      (tr 
+      (tr
          [th [txt "Id"];
           th [txt "Login"];
           th [txt "Real Name"];
           th [txt "E-mail"]]) ::
-      (List.map 
+      (List.map
          (fun user ->
-            tr 
+            tr
               [td [txt (string_of_int user.user_id)];
                td [txt user.user_login];
                td [txt user.user_real_name];
@@ -106,7 +106,7 @@ let sanitize_login_name name =
 let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
   let sanitized_login = sanitize_login_name login in
   match sanitized_login with
-    None -> 
+    None ->
       return [Html_util.error ("Only alphanumeric chars are allowed in login name!  Got '"^login^"'")]
   | Some login ->
       Db.query_user login >>= fun old_user ->
@@ -116,7 +116,7 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
         return [Html_util.error ("Cannot create '"^login^"' user.  The login name 'guest' is reserved for internal use!")]
       else if passwd <> passwd2 then
         return [Html_util.error "Re-typed password doesn't match your password!"]
-      else 
+      else
         begin
           let passwd_md5 = Digest.to_hex (Digest.string passwd) in
           if update_user then
@@ -124,7 +124,7 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
               match old_user with
                 Some u ->
                   (* If no password was entered, set it to old value: *)
-                  let new_passwd_md5 = 
+                  let new_passwd_md5 =
                     if passwd = "" then None else Some passwd_md5 in
                   Db.with_conn
                     (fun conn ->
@@ -132,7 +132,7 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
                          ~user_id:u.user_id ~passwd:new_passwd_md5 ~real_name ~email)
                   >>= fun _ -> return []
               | None ->
-                  assert false 
+                  assert false
             end
           else
             Db.with_conn
@@ -146,7 +146,7 @@ let _ =
     (fun () (login, (passwd, (passwd2, (real_name, email))))  ->
        Session.with_user_login
          (fun cur_user ->
-            Privileges.with_can_create_user cur_user 
+            Privileges.with_can_create_user cur_user
               (fun () ->
                  save_user ~update_user:false
                    ~login ~passwd ~passwd2 ~real_name ~email >>= fun err ->
@@ -164,12 +164,12 @@ let save_user_prefs c_passwd c_passwd2 (c_name,old_name) (c_email,old_email) =
         [td [txt "Re-type Password:"];
          td [input ~input_type:`Password ~name:c_passwd2 Form.string]];
 
-      tr 
+      tr
         [td [txt "Name:"];
          td [input ~input_type:`Text ~name:c_name
                ~value:old_name Form.string]];
 
-      tr 
+      tr
         [td [txt "E-mail Address:"];
          td [input ~input_type:`Text ~name:c_email
                ~value:old_email Form.string]];
@@ -197,9 +197,9 @@ let rec view_edit_user_page caller ~err ~cur_user user_to_edit =
           [post_form ~service:service_save_user_edit
              (fun (passwd,(passwd2,(name,email))) ->
                 [h2 [txt ("Edit User '"^user_to_edit.user_login^"'")];
-                 save_user_prefs passwd passwd2 
-                   (name,user_to_edit.user_real_name) 
-                   (email,user_to_edit.user_email)]) 
+                 save_user_prefs passwd passwd2
+                   (name,user_to_edit.user_real_name)
+                   (email,user_to_edit.user_email)])
              (caller, user_to_edit.user_login)]))
 
 
@@ -213,8 +213,8 @@ let _ =
               | Some user_to_edit ->
                   Privileges.with_can_edit_user cur_user user_to_edit
                     (fun () ->
-                         save_user 
-                           ~update_user:true 
+                         save_user
+                           ~update_user:true
                            ~login:login
                            ~passwd ~passwd2 ~real_name ~email >>= fun err ->
                        (* Update password in the session if we're editing current
@@ -228,7 +228,7 @@ let _ =
                             match caller with
                                 Some "user_admin" ->
                                   view_user_admin_page ~err ~cur_user
-                              | Some _ -> 
+                              | Some _ ->
                                   return (Html_util.error_page "Invalid caller service!")
                               | None ->
                                   Db.query_user login

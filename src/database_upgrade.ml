@@ -1,17 +1,17 @@
 (* Copyright (c) 2007-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 module Psql = Postgresql
@@ -75,7 +75,7 @@ Another [http://www.google.com link], this time to [http://www.google.com].
 This !WikiText that does not become a link.  Write these as `!WikiText` to make Nurpawiki not regard it as a !WikiLink.  I.e., prefix it with a bang (!).
 ');"
 
-let logged_exec ~conn logmsg sql = 
+let logged_exec ~conn logmsg sql =
   Buffer.add_string logmsg ("  "^sql^"\n");
   ignore (guarded_exec ~conn sql)
 
@@ -83,14 +83,14 @@ let logged_exec ~conn logmsg sql =
 let upgrade_schema_from_0 ~conn logmsg =
   Buffer.add_string logmsg "Upgrading schema to version 1\n";
   (* Create version table and set version to 1: *)
-  let sql = 
+  let sql =
     "CREATE TABLE version (schema_version integer NOT NULL);
      INSERT INTO version (schema_version) VALUES('1')" in
   logged_exec ~conn logmsg sql;
 
   let empty_passwd = (Digest.to_hex (Digest.string "")) in
-  let sql = 
-    "CREATE TABLE users (id SERIAL, 
+  let sql =
+    "CREATE TABLE users (id SERIAL,
                          login text NOT NULL,
                          passwd varchar(64) NOT NULL,
                          real_name text,
@@ -110,20 +110,20 @@ let upgrade_schema_from_0 ~conn logmsg =
 
 
 let table_exists ~conn ~schema ~table =
-  let sql = 
-    "SELECT * from pg_tables WHERE schemaname = '"^schema^"' 
+  let sql =
+    "SELECT * from pg_tables WHERE schemaname = '"^schema^"'
      AND tablename = '"^table^"'" in
   let r = guarded_exec ~conn sql in
   r#ntuples <> 0
 
 let function_exists ~conn fn =
-  let sql = 
+  let sql =
     "SELECT proname from pg_proc WHERE proname = '"^fn^"'" in
   let r = guarded_exec ~conn sql in
   r#ntuples <> 0
 
-let redefine_wikitext_search ~conn schema = 
-  let version = 
+let redefine_wikitext_search ~conn schema =
+  let version =
     match function_exists ~conn "tsvector_update_trigger" with
       true -> `Built_in_tsearch2
     | false ->
@@ -131,7 +131,7 @@ let redefine_wikitext_search ~conn schema =
           `No_built_in_tsearch2
         else (* TODO no tsearch2 installed, ISSUE ERROR! *)
           assert false in
-  let proc = 
+  let proc =
     match version with
       `No_built_in_tsearch2 ->
         "tsearch2('page_searchv', 'page_text')"
@@ -149,17 +149,17 @@ CREATE TRIGGER wikitext_searchv_update
 
 let upgrade_schema_from_1 ~conn logmsg =
   Buffer.add_string logmsg "Upgrading schema to version 2\n";
-  let sql = 
+  let sql =
     "ALTER TABLE pages ADD COLUMN head_revision bigint not null default 0" in
   logged_exec ~conn logmsg sql;
 
-  let sql = 
+  let sql =
     "ALTER TABLE wikitext ADD COLUMN page_revision bigint not null default 0" in
   logged_exec ~conn logmsg sql;
 
   let sql =
     "ALTER TABLE wikitext
-     ADD COLUMN page_created timestamp not null default now()" in  
+     ADD COLUMN page_created timestamp not null default now()" in
   logged_exec ~conn logmsg sql;
 
   let sql = "ALTER TABLE wikitext ADD COLUMN page_created_by_user_id bigint" in
@@ -167,10 +167,10 @@ let upgrade_schema_from_1 ~conn logmsg =
 
   (* Change various tsearch2 default behaviour: *)
   if table_exists ~conn ~schema:"public" ~table:"pg_ts_cfg" then
-    let sql = "UPDATE pg_ts_cfg SET locale = current_setting('lc_collate') 
+    let sql = "UPDATE pg_ts_cfg SET locale = current_setting('lc_collate')
  WHERE ts_name = 'default'" in
     logged_exec ~conn logmsg sql
-  else 
+  else
     ();
   let sql = redefine_wikitext_search ~conn "public" in
   logged_exec ~conn logmsg sql;
@@ -185,8 +185,8 @@ SELECT page_id, "^prfx^"headline(page_text, q), "^prfx^"rank(page_searchv, q) FR
 
 (* Version 2 -> 3: move all tables under 'nw' schema *)
 let upgrade_schema_from_2 ~conn logmsg =
-  let tables = 
-    ["users"; "todos"; "activity_in_pages"; "activity_log"; 
+  let tables =
+    ["users"; "todos"; "activity_in_pages"; "activity_log";
      "pages"; "version"; "wikitext"; "todos_in_pages"] in
   logged_exec ~conn logmsg "CREATE SCHEMA nw";
   List.iter
@@ -199,12 +199,12 @@ let upgrade_schema_from_2 ~conn logmsg =
   logged_exec ~conn logmsg "ALTER TYPE findwikipage_t SET SCHEMA nw";
   logged_exec ~conn logmsg "DROP FUNCTION findwikipage(text)";
 
-  let create_find_fn_sql = 
+  let create_find_fn_sql =
     if function_exists ~conn "ts_rank" then
-      findwikipage_function_sql "ts_" 
+      findwikipage_function_sql "ts_"
     else
       if function_exists ~conn "rank" then
-        findwikipage_function_sql "" 
+        findwikipage_function_sql ""
       else
         assert false in
   logged_exec ~conn logmsg create_find_fn_sql;
@@ -222,7 +222,7 @@ let db_schema_version_raw conn =
   else
     if not (table_exists ~conn ~schema:"public" ~table:"version") then
       0
-    else 
+    else
       let r = guarded_exec ~conn "SELECT (version.schema_version) FROM version" in
       int_of_string (r#get_tuple 0).(0)
 
@@ -253,7 +253,7 @@ let upgrade_schema () = with_conn upgrade_schema_raw
 
 (** Check whether the nurpawiki schema is properly installed on Psql *)
 let is_schema_installed () = with_conn (fun conn ->
-  let sql = 
+  let sql =
     "SELECT * from pg_tables WHERE (schemaname = 'public' OR schemaname = 'nw') AND "^
       "tablename = 'todos'" in
   let r = guarded_exec ~conn sql in

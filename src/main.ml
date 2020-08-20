@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 open Eliom_content.Html.F
@@ -97,7 +97,7 @@ let make_static_uri = Html_util.make_static_uri
 (* Deal with Wiki markup *)
 module WikiML =
   struct
-    type preproc_line = 
+    type preproc_line =
         [ `Wiki of string
         | `NoWiki of string list
         ]
@@ -108,24 +108,24 @@ module WikiML =
     let h2_re = Pcre.regexp "^==(.*)==([ \n\r]*)?$"
     let h3_re = Pcre.regexp "^===(.*)===([ \n\r]*)?$"
     let list_re = Pcre.regexp "^[ ]?([*]+) (.*)([ \n\r]*)?$"
-      
-    let is_list = function 
+
+    let is_list = function
         `Wiki line ->
           match_pcre_option list_re line
-      | `NoWiki _ -> 
+      | `NoWiki _ ->
           None
-          
-    let is_list_or_empty = function 
+
+    let is_list_or_empty = function
         `Wiki line ->
           matches_pcre list_re line || matches_pcre ws_or_empty_re line
       | `NoWiki _ -> false
-          
+
     let take_while pred lines =
-      let rec loop acc = function 
-          (x::xs) as lst -> 
+      let rec loop acc = function
+          (x::xs) as lst ->
             if pred x then
               loop (x::acc) xs
-            else 
+            else
               (lst, List.rev acc)
         | [] ->
             ([], List.rev acc) in
@@ -135,26 +135,26 @@ module WikiML =
     let accepted_chars_sans_ws = "["^accepted_chars_^"-]+"
     let accepted_chars = "["^accepted_chars_^" -]+"
 
-    let italic_re = 
+    let italic_re =
       Pcre.regexp ("^(_("^(del_substring accepted_chars "_")^")_)")
 
-    let bold_re = 
+    let bold_re =
       Pcre.regexp ("^(\\*("^del_substring accepted_chars "\\*" ^")\\*)")
 
-    let code_re = 
+    let code_re =
       Pcre.regexp ("^(`("^del_substring accepted_chars "`" ^")`)")
 
     let text_re = Pcre.regexp ("^("^accepted_chars_sans_ws^")")
     let wikilink_re = Pcre.regexp "^([!]?[A-Z][a-z]+([A-Z][a-z]+)+)"
-      
-    let wikilinkanum_re = 
+
+    let wikilinkanum_re =
       Pcre.regexp ("^(\\[(wiki|file|http|https|ftp):("^accepted_chars_sans_ws^
                     ")[ ]+("^accepted_chars^")\\])")
 
-    let wikilinkanum_no_text_re = 
+    let wikilinkanum_no_text_re =
       Pcre.regexp ("^(\\[(wiki|file|http|https|ftp):("^accepted_chars_sans_ws^")\\])")
 
-    let todo_re = 
+    let todo_re =
       Pcre.regexp ("\\[todo:([0-9]+)( "^accepted_chars^")?\\]")
 
     let open_pre_re = Pcre.regexp "^(<pre>|8<)\\s*$"
@@ -171,9 +171,9 @@ module WikiML =
                  begin
                    (* Handle <pre>..</pre> *)
                    let (after_pre,contents) =
-                     take_while 
+                     take_while
                        (fun x -> match_pcre_option close_pre_re x = None) xs in
-                   let next = 
+                   let next =
                      match after_pre with [] -> [] | _::next -> next in
                    loop (`NoWiki contents :: acc) next
                  end
@@ -194,12 +194,12 @@ module WikiML =
     (* Todo item manipulation HTML *)
     let complete_todo id =
       [Html_util.complete_task_img_link id]
-          
+
     let priority_arrow id up_or_down =
-      let (title,arrow_img,dir) = 
-        if up_or_down then 
+      let (title,arrow_img,dir) =
+        if up_or_down then
           ("Raise priority!", "arrow_up.png", true)
-        else 
+        else
           ("Lower priority!", "arrow_down.png", false) in
       let arrow_img =
         img ~alt:"Logo" ~src:(make_static_uri [arrow_img]) () in
@@ -214,26 +214,26 @@ module WikiML =
 
     let todo_editor_link todo_id page =
       Html_util.todo_edit_img_link (ET_view page) todo_id
-        
+
     let todo_modify_buttons ~cur_user page todo_id todo =
       let completed = todo.t_completed in
       span ~a:[a_class ["no_break"]]
         (if completed || not (Privileges.can_edit_task todo cur_user) then
            []
-         else 
+         else
            (todo_editor_link todo_id page @
               mod_priorities todo.t_priority todo_id @
               complete_todo todo_id))
 
     let translate_list items =
-      let add_ul t lst = 
+      let add_ul t lst =
         t @ [ul lst] in
       let rec loop = function
           ((nesting1,text1)::(nesting2,text2)::xs) as lst ->
             if nesting1 = nesting2 then
               (li text1)::loop (List.tl lst)
             else if nesting1 < nesting2 then (* enter *)
-              let (next_same_level,same_or_higher) = 
+              let (next_same_level,same_or_higher) =
                 take_while (fun (n,_) -> n >= nesting2) (List.tl lst) in
               (li (add_ul text1 (loop same_or_higher)))::loop next_same_level
             else (* leave *)
@@ -247,16 +247,16 @@ module WikiML =
     let parse_lines ~cur_user cur_page (todo_data : todo IMap.t) preprocessed_lines =
 
       let wikilink scheme page text =
-        let ext_img = 
-          img ~alt:"External link" 
+        let ext_img =
+          img ~alt:"External link"
             ~src:(make_static_uri ["external_link.png"]) () in
         if scheme = "wiki" || scheme = "" then
           let t = if text = "" then page else text in
           let%lwt b = Db.wiki_page_exists page in
           if b then
             a wiki_view_page [txt t] (page, (None, (None, None))) |> return
-          else 
-            a ~a:[a_class ["missing_page"]] 
+          else
+            a ~a:[a_class ["missing_page"]]
               ~service:wiki_view_page [txt t]
               (page,(None,(None,None))) |> return
         else (* External link *)
@@ -269,63 +269,63 @@ module WikiML =
 
       let add_todo acc todo =
         let todo_id = int_of_string todo in
-        let html = 
-          try 
+        let html =
+          try
             let todo = IMap.find todo_id todo_data in
             let completed = todo.t_completed in
-            let style = 
-              if completed then 
+            let style =
+              if completed then
                 ["todo_descr_completed"]
-              else 
+              else
                 ["todo_descr"; Html_util.priority_css_class todo.t_priority] in
-            span 
+            span
               [todo_modify_buttons ~cur_user cur_page todo_id todo;
                span ~a:[a_class style] (Html_util.todo_descr_html todo.t_descr todo.t_owner)]
-          with Not_found -> 
+          with Not_found ->
             (txt "UNKNOWN TODO ID!") in
         add_html acc html in
 
-      let seqmatch s charpos ~default = 
+      let seqmatch s charpos ~default =
         let rec loop = function
             (x,f)::xs ->
               (match match_pcre_option ~charpos x s with
-                 Some m -> 
+                 Some m ->
                    let fmlen = String.length m.(0) in
                    f fmlen m
                | None -> loop xs)
-          | [] -> 
+          | [] ->
               default () in
         loop in
 
       let rec parse_text acc s =
 
-        let wiki_error s charpos = 
+        let wiki_error s charpos =
           let s = (String.sub s charpos ((String.length s)-charpos)) in
           return &
-          add_html acc 
-            (Html_util.error 
+          add_html acc
+            (Html_util.error
                ("WIKI SYNTAX ERROR on line: '"^s^"'")) in
 
         let len = String.length s in
         let rec loop acc charpos =
           if charpos >= len then
             return acc
-          else 
-            if s.[charpos] = '\t' then 
+          else
+            if s.[charpos] = '\t' then
               let m = "\t" in
               loop (add_html acc (txt m)) (charpos+1)
-            else if s.[charpos] = ' ' then 
+            else if s.[charpos] = ' ' then
               let m = " " in
               loop (add_html acc (txt m)) (charpos+1)
             else if s.[charpos] = '\r' || s.[charpos] = '\n' then
               return acc
-            else 
+            else
               seqmatch s charpos ~default:(fun () -> wiki_error s charpos)
                 [(todo_re,
                   (fun fmlen r ->
                      let todo_id = r.(1) in
                      loop (add_todo acc todo_id) (charpos+fmlen)));
-                 (wikilink_re, 
+                 (wikilink_re,
                   (fun fmlen r ->
                      let m = r.(1) in
                      (* If the WikiLink starts with a bang (!), don't create
@@ -336,7 +336,7 @@ module WikiML =
                      else
                        let%lwt h = wikilink "" m m in
                        loop (add_html acc h) (charpos+fmlen)));
-                 (wikilinkanum_re, 
+                 (wikilinkanum_re,
                   (fun fmlen r ->
                      let scheme = r.(2) in
                      let page = r.(3) in
@@ -367,7 +367,7 @@ module WikiML =
                      loop (add_html acc (txt r.(1))) (charpos+fmlen)))]
         in
         loop acc 0 >>= wrap1 List.rev in
-      
+
       let rec pcre_first_match str pos =
         let rec loop = function
             (rex,f)::xs ->
@@ -378,18 +378,18 @@ module WikiML =
       let rec loop acc = function
           ((`Wiki x)::xs) as lst ->
 
-            let parse_list r = 
+            let parse_list r =
               (* Grab all lines starting with '*': *)
               let (after_bullets,bullets) =
                 take_while is_list_or_empty lst in
               let%lwt list_items =
                 filter_map
-                  (function 
+                  (function
                        (`Wiki e) as wl ->
                          if matches_pcre ws_or_empty_re e then
                            (* Empty line, ignore *)
                            return None
-                         else 
+                         else
                            begin
                              match is_list wl with
                                Some r ->
@@ -401,7 +401,7 @@ module WikiML =
                            end
                      | `NoWiki _ -> assert false) bullets in
               loop ((translate_list list_items)::acc) after_bullets in
-            
+
             let wiki_pats =
               [(h3_re, (fun r -> loop ((h3 [txt r.(1)])::acc) xs));
                (h2_re, (fun r -> loop ((h2 [txt r.(1)])::acc) xs));
@@ -419,7 +419,7 @@ module WikiML =
         | (`NoWiki x::xs) ->
             loop (pre [txt (String.concat "\n" x)]::acc) xs
         | [] -> return & List.rev acc in
-      
+
       loop [] preprocessed_lines
 
   end
@@ -448,24 +448,24 @@ let todo_list_table_html ~cur_user cur_page todos =
 
   return &
   table ~a:[a_class ["todo_table"]] @@
-    (tr 
+    (tr
        [th [txt "Id"]; th [txt "Description"]]) ::
     (List.map
        (fun todo ->
           let id = todo.t_id in
           let completed = todo.t_completed in
-          let row_pri_style = 
+          let row_pri_style =
             if completed then
-              "todo_completed_row" 
-            else 
+              "todo_completed_row"
+            else
               Html_util.priority_css_class todo.t_priority in
           let row_class =
             row_pri_style::
               (if priority_changes = Some id then
                  ["todo_priority_changed"]
-               else 
+               else
                  []) in
-          (tr 
+          (tr
              [td ~a:[a_class row_class] [txt (string_of_int id)];
               td ~a:[a_class row_class] (todo_page_link todo);
               td [(WikiML.todo_modify_buttons ~cur_user cur_page id todo)]]))
@@ -473,7 +473,7 @@ let todo_list_table_html ~cur_user cur_page todos =
 
 let wiki_page_menu_html ~cur_user page content =
 
-  let edit_link = 
+  let edit_link =
     [a ~service:wiki_edit_page ~a:[a_accesskey '1'; a_class ["ak"]]
        [img ~alt:"Edit" ~src:(make_static_uri ["edit.png"]) ();
         txt "Edit page"] page] in
@@ -494,14 +494,14 @@ let wiki_page_menu_html ~cur_user page content =
   in
 
   let undo_task_id = Session.any_complete_undos () in
-  let top_info_bar  = 
+  let top_info_bar  =
     match undo_task_id with
       None -> []
     | Some id ->
         [span ~a:[a_class ["action_bar"]]
            [txt ("Completed task "^string_of_int id^" ");
-            a ~a:[a_class ["undo_link"]] 
-              ~service:task_side_effect_undo_complete_action 
+            a ~a:[a_class ["undo_link"]]
+              ~service:task_side_effect_undo_complete_action
               [txt "Undo"] id]] in
 
   return & Html_util.navbar_html ~cur_user
@@ -520,16 +520,16 @@ let view_page ~cur_user ?(revision_id=None) page_id page_name ~printable =
     let%lwt page_content =
       wikiml_to_html ~cur_user page_id page_name ~revision_id todos in
     return & Html_util.html_stub page_content
-  else 
+  else
     let%lwt page_content =
-      (wiki_page_contents_html 
-         ~cur_user 
+      (wiki_page_contents_html
+         ~cur_user
          page_id page_name ~revision_id todos ())
     in
     return & Html_util.html_stub page_content
-      
+
 (* Parse existing todo's from the current to-be-saved wiki page and
-   update the DB relation on what todos are on the page. 
+   update the DB relation on what todos are on the page.
 
    Todo descriptions are inspected and if they've been changed, modify
    them in the DB.  It's also possible to resurrect completed tasks
@@ -541,21 +541,21 @@ let check_new_and_removed_todos ~cur_user page_id lines =
     (fst (Pcre.get_substring_ofs result 0), result) in
 
   (* Figure out which TODOs are mentioned on the wiki page: *)
-  let page_todos = 
+  let page_todos =
     List.fold_left
       (fun acc -> function
            `Wiki line ->
              let rec loop acc n =
-               try 
+               try
                  let (offs,res) = search_forward WikiML.todo_re line n in
-                 let m = 
-                   try 
+                 let m =
+                   try
                      Some (Pcre.get_substring res 2)
-                   with 
+                   with
                      Not_found -> None in
                  loop ((Pcre.get_substring res 1, m)::acc)
                    (offs+(String.length (Pcre.get_substring res 0)))
-               with 
+               with
                  Not_found -> acc in
              loop acc 0
          | `NoWiki _ -> acc) [] lines in
@@ -572,7 +572,7 @@ let check_new_and_removed_todos ~cur_user page_id lines =
        match descr with
          Some descr ->
            (match match_pcre_option completed_re descr with
-              Some _ -> 
+              Some _ ->
                 (* Task has already been completed, do nothing: *)
                 return ()
             | None ->
@@ -593,16 +593,16 @@ let check_new_and_removed_todos ~cur_user page_id lines =
                          if todo.t_descr <> new_descr then
                            Db.update_todo_descr id new_descr
                          else return ()
-                       with 
-                         Not_found -> 
+                       with
+                         Not_found ->
                            (* Internal inconsistency, should not happen. *)
                            return ()
                      end
                  | None -> return ()))
        | None -> return ())  page_todos;%lwt
-  
+
   filter_map
-    (fun e -> 
+    (fun e ->
        let id = int_of_string (fst e) in
        let%lwt b = Db.todo_exists id in
        if b then return & Some id else return & None) page_todos >>=
@@ -612,7 +612,7 @@ let check_new_and_removed_todos ~cur_user page_id lines =
 let global_substitute ?groups pat subst s =
   Pcre.substitute_substrings ~rex:pat ~subst:(fun r -> subst r) s
 
-let new_todo_re = 
+let new_todo_re =
   Pcre.regexp ("\\[todo ("^WikiML.accepted_chars^")\\]")
 
 (* Insert new TODOs from the wiki ML into DB and replace [todo descr]
@@ -622,9 +622,9 @@ let convert_new_todo_items cur_user page items = Db.with_conn (fun conn ->
   let owner_id = cur_user.user_id in
   List.map
     (function
-         `Wiki line -> 
+         `Wiki line ->
            `Wiki (global_substitute new_todo_re
-                    (fun r -> 
+                    (fun r ->
                        let descr = Pcre.get_substring r 1 in
                        let id = Db.new_todo ~conn page owner_id descr in
                        "[todo:"^id^" "^descr^"]") line)
@@ -661,15 +661,15 @@ let annotate_old_todo_items page page_todos (lines : WikiML.preproc_line list) =
   List.map
     (function
          `Wiki line ->
-           `Wiki 
+           `Wiki
              (global_substitute WikiML.todo_re
-                (fun r -> 
+                (fun r ->
                    let id = Pcre.get_substring r 1 in
-                   let (descr,completed) = 
-                     try 
+                   let (descr,completed) =
+                     try
                        let todo = IMap.find (int_of_string id) page_todos in
                        (todo.t_descr,if todo.t_completed then "(x) " else "")
-                     with 
+                     with
                        Not_found -> ("UNKNOWN TODO","") in
                    "[todo:"^id^" "^completed^descr^"]") line)
        | (`NoWiki line) as x ->
@@ -693,12 +693,12 @@ let _ =
           let%lwt x = Db.new_wiki_page ~user_id:cur_user.user_id page_name in
           return (x, IMap.empty, [])
         end in
-    let wikitext = 
+    let wikitext =
       String.concat "\n" (WikiML.wikitext_of_preprocessed_lines preproc_wikitext) in
     let f =
       post_form service_save_page_post
-        (fun chain -> 
-           [(p [input ~input_type:`Submit ~value:"Save" Form.string; 
+        (fun chain ->
+           [(p [input ~input_type:`Submit ~value:"Save" Form.string;
                 Html_util.cancel_link wiki_view_page
                   (page_name,(None,(None,None)));
                 br ();
@@ -724,13 +724,13 @@ let view_wiki_page ~cur_user (page_name, (printable, (revision_id, _))) =
     Some page_id ->
       view_page ~cur_user ~revision_id page_id page_name ~printable
   | None ->
-      let f = 
+      let f =
         a wiki_edit_page [txt "Create new page"] page_name in
       let%lwt h = wiki_page_menu_html ~cur_user page_name [f] in
       return & Html_util.html_stub h
 
 (* /view?p=Page *)
-let _ = 
+let _ =
   Eliom_registration.Html.register wiki_view_page
     (fun ((_, (_, (_, force_login))) as params) () ->
        (* If forced login is not requested, we'll let read-only guests
@@ -749,20 +749,20 @@ let _ =
 let _ =
   let gen_html = function
       "empty" ->
-        (html 
+        (html
            (head (title (txt "")) [])
            (body [p [txt "Empty page"]]))
     | "db1" ->
         (* TODO TODO add simple SQL query here *)
 (*        ignore (Db.query_activities ());*)
-        (html 
+        (html
            (head (title (txt "")) [])
            (body [p [txt "Test one DB query"]]))
     | _ ->
-        (html 
+        (html
            (head (title (txt "")) [])
            (body [p [txt "invalid 'test' param!"]])) in
-  
+
   Eliom_registration.Html.register benchmark_page
     (fun test_id () ->
        return (gen_html test_id))
@@ -770,11 +770,11 @@ let _ =
 (* /search?q=[keyword list] *)
 let _ =
   (* Parse <b></b> tags from headline and convert to b tags. *)
-  let html_of_headline h = 
+  let html_of_headline h =
     let rec html_of_elem = function
         Nethtml.Element ("b",_,c) ->
-          let c = 
-            List.flatten 
+          let c =
+            List.flatten
               (List.rev (List.fold_left (fun acc e -> (html_of_elem e)::acc) [] c)) in
           [(span ~a:[a_class ["sr_hilite"]] c)]
       | Nethtml.Element (_,_,_) -> []
@@ -788,15 +788,15 @@ let _ =
 
   let render_results search_results =
     List.flatten
-      (List.map 
+      (List.map
          (fun sr ->
             match sr.sr_result_type with
               SR_page ->
-                let link descr = 
+                let link descr =
                   a ~a:[a_class ["sr_link"]] ~service:wiki_view_page
                     [txt descr]
                     (descr,(None,(None,None))) in
-                [p ([link (Option.get sr.sr_page_descr); br ()] @ 
+                [p ([link (Option.get sr.sr_page_descr); br ()] @
                       html_of_headline sr.sr_headline)]
             | SR_todo -> assert false) search_results) in
   let gen_search_page ~cur_user search_str =

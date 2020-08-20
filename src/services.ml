@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 open Eliom_content.Html.F
@@ -23,7 +23,7 @@ open Types
 
 open Lwt
 
-let wiki_view_page = 
+let wiki_view_page =
   create ~path:(Path ["view"]) ~meth:(Get ((string "p")
                         ** (opt (bool "printable"))
                         ** (opt (int "r"))
@@ -41,9 +41,9 @@ let edit_todo_get_page = create ~path:(Path ["edit_todo"])
       et_cont_of_string string_of_et_cont "src_service") **
      (opt (int "tid")))) ()
 
-let edit_todo_page = 
+let edit_todo_page =
   create_attached_post
-    ~fallback:edit_todo_get_page 
+    ~fallback:edit_todo_get_page
     ~post_params:any ()
 
 let history_page = create ~path:(Path ["history"]) ~meth:(Get (opt (int "nth_p"))) ()
@@ -69,5 +69,5 @@ let task_side_effect_complete_action =
 let task_side_effect_undo_complete_action =
   create ~path:No_path ~meth:(Get (int "task_id")) ()
 
-let task_side_effect_mod_priority_action = 
+let task_side_effect_mod_priority_action =
   create ~path:No_path ~meth:(Get ((int "task_id") ** bool "dir")) ()

@@ -1,17 +1,17 @@
 (* Copyright (c) 2006-2008 Janne Hellsten <jjhellst@gmail.com> *)
 
-(* 
+(*
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.  You should have received
  * a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>. 
+ * If not, see <http://www.gnu.org/licenses/>.
  *)
 
 open Types
@@ -37,12 +37,12 @@ module ConnectionPool =
 
     let with_mutex m f =
       Mutex.lock m;
-      try 
+      try
         let r = f () in
         Mutex.unlock m;
         r
-      with 
-        x -> 
+      with
+        x ->
           Mutex.unlock m;
           raise x
 
@@ -74,24 +74,24 @@ module ConnectionPool =
                let host = Option.default "localhost" dbcfg.db_host in
                let port = Option.default "" dbcfg.db_port in
                let password = Option.default "" dbcfg.db_pass in
-               let c = 
+               let c =
                  new Psql.connection ~host ~port ~password
                    ~dbname:dbcfg.db_name ~user:dbcfg.db_user
                    () in
                connection := Some c;
                (* Search tables from nurpawiki schema first: *)
                f c)
-        
-    let with_conn f = 
-      try 
+
+    let with_conn f =
+      try
         with_conn_priv f
-      with 
+      with
         (Psql.Error e) as ex ->
           Ocsigen_messages.errlog (P.sprintf "psql failed : %s\n" (Psql.string_of_error e));
           raise ex
       | x ->
           raise x
-        
+
 
   end
 
@@ -107,12 +107,12 @@ let todos_user_login_join = "FROM nw.todos LEFT OUTER JOIN nw.users ON nw.todos.
    parse_todo_result *)
 let todo_tuple_format = "nw.todos.id,descr,completed,priority,activation_date,user_id,nw.users.login"
 
-let todo_of_row row = 
+let todo_of_row row =
   let id = int_of_string (List.nth row 0) in
   let descr = List.nth row 1 in
   let completed = (List.nth row 2) = "t" in
   let owner_id = List.nth row 5 in
-  let owner = 
+  let owner =
     if owner_id = "" then
       None
     else
@@ -120,19 +120,19 @@ let todo_of_row row =
         owner_id = int_of_string owner_id;
         owner_login = List.nth row 6;
       } in
-    
+
   let pri = List.nth row 3 in
   {
     t_id = id;
-    t_descr = descr; 
+    t_descr = descr;
     t_completed = completed;
     t_priority = int_of_string pri;
     t_activation_date =  List.nth row 4;
     t_owner = owner;
   }
-    
-let parse_todo_result res = 
-  List.fold_left 
+
+let parse_todo_result res =
+  List.fold_left
     (fun acc row ->
        let id = int_of_string (List.nth row 0) in
        IMap.add id (todo_of_row row) acc)
@@ -144,10 +144,10 @@ let guarded_exec ~(conn : Psql.connection) query =
   with
     (Psql.Error e) as ex ->
       (match e with
-         Psql.Connection_failure msg -> 
+         Psql.Connection_failure msg ->
            P.eprintf "psql failed : %s\n" msg;
            raise ex
-       | _ -> 
+       | _ ->
            P.eprintf "psql failed : %s\n" (Psql.string_of_error e);
            raise ex)
 
@@ -159,9 +159,9 @@ let insert_todo_activity ~user_id todo_id ?(page_ids=None) activity =
         (string_of_int (int_of_activity_type activity))^", "^user_id_s^
         ", "^todo_id^")"
   | Some pages ->
-      let insert_pages = 
+      let insert_pages =
         List.map
-          (fun page_id -> 
+          (fun page_id ->
              "INSERT INTO nw.activity_in_pages(activity_log_id,page_id) "^
                "VALUES (CURRVAL('nw.activity_log_id_seq'), "^string_of_int page_id^")")
           pages in
@@ -173,10 +173,10 @@ let insert_todo_activity ~user_id todo_id ?(page_ids=None) activity =
 
 let insert_save_page_activity ~user_id (page_id : int) = with_conn (fun conn ->
   let sql = "BEGIN;
-INSERT INTO nw.activity_log(activity_id, user_id) 
+INSERT INTO nw.activity_log(activity_id, user_id)
        VALUES ("^(string_of_int (int_of_activity_type AT_edit_page))^
     " ,"^(string_of_int user_id)^");
-INSERT INTO nw.activity_in_pages(activity_log_id,page_id) 
+INSERT INTO nw.activity_in_pages(activity_log_id,page_id)
        VALUES (CURRVAL('nw.activity_log_id_seq'), "^string_of_int page_id^");
 COMMIT" in
   ignore (guarded_exec ~conn sql)
@@ -185,8 +185,8 @@ COMMIT" in
 let query_todos_by_ids_raw todo_ids conn =
   if todo_ids <> [] then
     let ids = String.concat "," (List.map string_of_int todo_ids) in
-    let r = 
-      guarded_exec ~conn 
+    let r =
+      guarded_exec ~conn
       ("SELECT "^todo_tuple_format^" "^todos_user_login_join^" WHERE nw.todos.id IN ("^ids^")") in
     List.map todo_of_row (r#get_all_lst)
   else
@@ -205,7 +205,7 @@ let todo_exists id =
   match%lwt query_todo id with Some _ -> Lwt.return true | None -> Lwt.return false
 
 let update_todo_activation_date todo_id new_date = with_conn (fun conn ->
-  let sql = 
+  let sql =
     "UPDATE nw.todos SET activation_date = '"^new_date^"' WHERE id = "^
       (string_of_int todo_id) in
   ignore (guarded_exec ~conn sql)
@@ -221,21 +221,21 @@ let update_todo_descr todo_id new_descr = with_conn (fun conn ->
 
 
 let update_todo_owner_id todo_id owner_id = with_conn (fun conn ->
-  let owner_id_s = 
+  let owner_id_s =
     match owner_id with
-      Some id -> string_of_int id 
+      Some id -> string_of_int id
     | None -> "NULL" in
-  let sql = 
+  let sql =
     "UPDATE nw.todos SET user_id = "^owner_id_s^" WHERE id = "^
       (string_of_int todo_id) in
   ignore (guarded_exec ~conn sql)
 )
 
 
-let select_current_user id = 
+let select_current_user id =
   (match id with
      None -> ""
-   | Some user_id -> 
+   | Some user_id ->
        " AND (user_id = "^string_of_int user_id^" OR user_id IS NULL) ")
 
 (* Query TODOs and sort by priority & completeness *)
@@ -250,10 +250,10 @@ let query_all_active_todos ~current_user_id () = with_conn (fun conn ->
 
 let query_upcoming_todos ~current_user_id date_criterion = with_conn (fun conn ->
   let date_comparison =
-    let dayify d = 
+    let dayify d =
       "'"^string_of_int d^" days'" in
     match date_criterion with
-      (None,Some days) -> 
+      (None,Some days) ->
         "(activation_date > now()) AND (now()+interval "^dayify days^
           " >= activation_date)"
     | (Some d1,Some d2) ->
@@ -264,7 +264,7 @@ let query_upcoming_todos ~current_user_id date_criterion = with_conn (fun conn -
     | (Some d1,None) ->
         let sd1 = dayify d1 in
         "(activation_date > now()+interval "^sd1^")"
-    | (None,None) -> 
+    | (None,None) ->
         "activation_date <= now()" in
   let r = guarded_exec ~conn
     ("SELECT "^todo_tuple_format^" "^todos_user_login_join^" "^
@@ -273,7 +273,7 @@ let query_upcoming_todos ~current_user_id date_criterion = with_conn (fun conn -
        " AND completed='f' ORDER BY activation_date,priority,id") in
   List.map todo_of_row r#get_all_lst
 )
-    
+
 let new_todo ~conn page_id user_id descr =
   (* TODO: could wrap this into BEGIN .. COMMIT if I knew how to
      return the data from the query! *)
@@ -282,7 +282,7 @@ let new_todo ~conn page_id user_id descr =
  INSERT INTO nw.todos_in_pages(todo_id,page_id) values(CURRVAL('nw.todos_id_seq'), "
     ^string_of_int page_id^");"^
       (insert_todo_activity ~user_id
-         "(SELECT CURRVAL('nw.todos_id_seq'))" ~page_ids:(Some [page_id]) 
+         "(SELECT CURRVAL('nw.todos_id_seq'))" ~page_ids:(Some [page_id])
          AT_create_todo)^";
  SELECT CURRVAL('nw.todos_id_seq')" in
   let r = guarded_exec ~conn sql in
@@ -294,9 +294,9 @@ let todos_in_pages_raw todo_ids conn =
   (* Don't query if the list is empty: *)
   if todo_ids = [] then
     IMap.empty
-  else 
+  else
     let ids = String.concat "," (List.map string_of_int todo_ids) in
-    let sql = 
+    let sql =
       "SELECT todo_id,page_id,page_descr "^
         "FROM nw.todos_in_pages,nw.pages WHERE todo_id IN ("^ids^") AND page_id = nw.pages.id" in
     let r = guarded_exec ~conn sql in
@@ -315,11 +315,11 @@ let todos_in_pages todo_ids = with_conn (todos_in_pages_raw todo_ids)
 (* TODO must not query ALL activities.  Later we only want to
    currently visible activities => pages available. *)
 let query_activity_in_pages ~min_id ~max_id = with_conn (fun conn ->
-  let sql = 
-    "SELECT activity_log_id,page_id,page_descr 
-       FROM nw.activity_in_pages,nw.pages 
+  let sql =
+    "SELECT activity_log_id,page_id,page_descr
+       FROM nw.activity_in_pages,nw.pages
       WHERE page_id = pages.id
-        AND (activity_log_id > "^string_of_int min_id^" 
+        AND (activity_log_id > "^string_of_int min_id^"
              AND activity_log_id <= "^string_of_int max_id^")" in
   let r = guarded_exec ~conn sql in
   List.fold_left
@@ -328,7 +328,7 @@ let query_activity_in_pages ~min_id ~max_id = with_conn (fun conn ->
        let page_id = int_of_string (List.nth row 1) in
        let page_descr = List.nth row 2 in
        let lst = try IMap.find act_id acc with Not_found -> [] in
-       IMap.add act_id ({ p_id = page_id; p_descr = page_descr }::lst) acc) 
+       IMap.add act_id ({ p_id = page_id; p_descr = page_descr }::lst) acc)
     IMap.empty (r#get_all_lst)
 )
 
@@ -356,17 +356,17 @@ let query_page_todos page_id = with_conn (fun conn ->
    don't contain old todos moved to other pages or removed. *)
 let update_page_todos page_id todos = with_conn (fun conn ->
   let page_id' = string_of_int page_id in
-  let sql = 
+  let sql =
     "BEGIN;
  DELETE FROM nw.todos_in_pages WHERE page_id = "^page_id'^";"^
-      (String.concat "" 
-         (List.map 
+      (String.concat ""
+         (List.map
             (fun todo_id ->
                "INSERT INTO nw.todos_in_pages(todo_id,page_id)"^
                  " values("^(string_of_int todo_id)^", "^page_id'^");")
             todos)) ^
       "COMMIT" in
-  ignore (guarded_exec ~conn sql)                        
+  ignore (guarded_exec ~conn sql)
 )
 
 (* Mark task as complete and set completion date for today *)
@@ -376,7 +376,7 @@ let complete_task_generic ~user_id id op = with_conn (fun conn ->
       `Complete_task -> (AT_complete_todo, "t")
     | `Resurrect_task -> (AT_uncomplete_todo, "f") in
   let page_ids =
-    try 
+    try
       Some (List.map (fun p -> p.p_id) (IMap.find id (todos_in_pages_raw [id] conn)))
     with Not_found -> None in
   let ids = string_of_int id in
@@ -393,7 +393,7 @@ let complete_task ~user_id id =
 let uncomplete_task ~user_id id =
   complete_task_generic ~user_id id `Resurrect_task
 
-let query_task_priority ~conn id = 
+let query_task_priority ~conn id =
   let sql = "SELECT priority FROM nw.todos WHERE id = "^string_of_int id in
   let r = guarded_exec ~conn sql in
   int_of_string (r#get_tuple 0).(0)
@@ -403,7 +403,7 @@ let query_task_priority ~conn id =
    based on that. *)
 let offset_task_priority id incr = with_conn (fun conn ->
   let pri = min (max (query_task_priority ~conn id + incr) 1) 3 in
-  let sql = 
+  let sql =
     "UPDATE nw.todos SET priority = '"^(string_of_int pri)^
       "' where id="^string_of_int id in
   ignore (guarded_exec ~conn sql)
@@ -419,7 +419,7 @@ let new_wiki_page ~user_id page = with_conn (fun conn ->
   let sql =
     "INSERT INTO nw.pages (page_descr) VALUES ('"^escape ~conn page^"');
      INSERT INTO nw.wikitext (page_id,page_created_by_user_id,page_text)
-             VALUES ((SELECT CURRVAL('nw.pages_id_seq')), 
+             VALUES ((SELECT CURRVAL('nw.pages_id_seq')),
                       "^string_of_int user_id^", ''); "^
       "SELECT CURRVAL('nw.pages_id_seq')" in
   let r = guarded_exec ~conn sql in
@@ -442,7 +442,7 @@ BEGIN;
 SELECT * from nw.pages WHERE id = "^page_id_s^";
 
 -- Set ID of next revision
-UPDATE nw.pages SET head_revision = nw.pages.head_revision+1 
+UPDATE nw.pages SET head_revision = nw.pages.head_revision+1
   WHERE id = "^page_id_s^";
 
 -- Kill search vectors for previous version so that only
@@ -450,9 +450,9 @@ UPDATE nw.pages SET head_revision = nw.pages.head_revision+1
 -- full text search.
 --
 -- NOTE tsearch2 indexing trigger is set to run index updates
--- only on INSERTs and not on UPDATEs.  I wanted to be 
+-- only on INSERTs and not on UPDATEs.  I wanted to be
 -- more future proof and set it trigger on UPDATE as well,
--- but I don't know how to NOT have tsearch2 trigger 
+-- but I don't know how to NOT have tsearch2 trigger
 -- overwrite the below UPDATE with its own index.
 UPDATE nw.wikitext SET page_searchv = NULL WHERE page_id = "^page_id_s^";
 
@@ -481,7 +481,7 @@ let wiki_page_exists page_descr =
 
 let is_legal_page_revision ~conn page_id_s rev_id =
   let sql = "
-SELECT page_id FROM nw.wikitext 
+SELECT page_id FROM nw.wikitext
  WHERE page_id="^page_id_s^" AND page_revision="^string_of_int rev_id in
   let r = guarded_exec ~conn sql in
   r#ntuples <> 0
@@ -490,9 +490,9 @@ SELECT page_id FROM nw.wikitext
    not known, default to head revision. *)
 let load_wiki_page ?(revision_id=None) page_id = with_conn (fun conn ->
   let page_id_s = string_of_int page_id in
-  let head_rev_select = 
+  let head_rev_select =
     "(SELECT head_revision FROM nw.pages WHERE id = "^page_id_s^")" in
-  let revision_s = 
+  let revision_s =
     match revision_id with
       None -> head_rev_select
     | Some r ->
@@ -501,8 +501,8 @@ let load_wiki_page ?(revision_id=None) page_id = with_conn (fun conn ->
         else
           head_rev_select in
   let sql = "
-SELECT page_text FROM nw.wikitext 
- WHERE page_id="^string_of_int page_id^" AND 
+SELECT page_text FROM nw.wikitext
+ WHERE page_id="^string_of_int page_id^" AND
        page_revision="^revision_s^" LIMIT 1" in
   let r = guarded_exec ~conn sql in
   (r#get_tuple 0).(0)
@@ -512,7 +512,7 @@ let query_page_revisions page_descr = with_conn (fun conn ->
   match find_page_id_raw page_descr conn with
     None -> []
   | Some page_id ->
-      let option_of_empty s f = 
+      let option_of_empty s f =
         if s = "" then None else Some (f s) in
       let sql = "
 SELECT page_revision,nw.users.id,nw.users.login,date_trunc('second', page_created) FROM nw.wikitext
@@ -520,9 +520,9 @@ SELECT page_revision,nw.users.id,nw.users.login,date_trunc('second', page_create
   WHERE page_id = "^string_of_int page_id^"
   ORDER BY page_revision DESC" in
       let r = guarded_exec ~conn sql in
-      List.map 
-        (fun r -> 
-           { 
+      List.map
+        (fun r ->
+           {
              pr_revision = int_of_string (List.nth r 0);
              pr_owner_id = option_of_empty (List.nth r 1) int_of_string;
              pr_owner_login = option_of_empty (List.nth r 2) Std.identity;
@@ -530,7 +530,7 @@ SELECT page_revision,nw.users.id,nw.users.login,date_trunc('second', page_create
            })
         (r#get_all_lst)
 )
-        
+
 
 let query_past_activity ~min_id ~max_id = with_conn (fun conn ->
   let sql =
@@ -540,7 +540,7 @@ let query_past_activity ~min_id ~max_id = with_conn (fun conn ->
        LEFT OUTER JOIN nw.users ON nw.activity_log.user_id = nw.users.id
       WHERE
        nw.activity_log.activity_timestamp < now()
-       AND (nw.activity_log.id > "^string_of_int min_id^" 
+       AND (nw.activity_log.id > "^string_of_int min_id^"
             AND nw.activity_log.id <= "^string_of_int max_id^")
        ORDER BY activity_timestamp DESC" in
   let r = guarded_exec ~conn sql in
@@ -572,24 +572,24 @@ let search_wikipage str = with_conn (fun conn ->
     (fun row ->
        let id = int_of_string (List.nth row 0) in
        let hl = List.nth row 1 in
-       { sr_id = id; 
-         sr_headline = hl; 
+       { sr_id = id;
+         sr_headline = hl;
          sr_page_descr = Some (List.nth row 2);
          sr_result_type = SR_page })
 )
 
 
-let user_query_string = 
+let user_query_string =
   "SELECT id,login,passwd,real_name,email FROM nw.users"
 
 let user_of_sql_row row =
   let id = int_of_string (List.nth row 0) in
-  { 
+  {
     user_id = id;
     user_login = (List.nth row 1);
-    user_passwd = (List.nth row 2); 
-    user_real_name = (List.nth row 3); 
-    user_email = (List.nth row 4); 
+    user_passwd = (List.nth row 2);
+    user_real_name = (List.nth row 3);
+    user_email = (List.nth row 4);
   }
 
 let query_users () = with_conn (fun conn ->
@@ -603,8 +603,8 @@ let query_user username = with_conn (fun conn ->
   let sql =
     user_query_string ^" WHERE login = '"^escape ~conn username^"' LIMIT 1" in
   let r = guarded_exec ~conn sql in
-  if r#ntuples = 0 then 
-    None 
+  if r#ntuples = 0 then
+    None
   else
     Some (user_of_sql_row (r#get_tuple_lst 0))
 )
