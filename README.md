@@ -16,6 +16,7 @@ Get started!
 
  * [Installation](doc/Installation.md)
  * [Tutorial](doc/Tutorial.md)
+ * [Upgrading from a previous version](doc/Upgrading.md)
 
 Development
 -----------
@@ -32,3 +33,9 @@ Want to help?
 Don't like something?  Have an improvement suggestion?  Code review
 comments?  File a bug to the issue database and we'll see what can be
 done about it.
+
+Releases
+--------
+
+ * [Release notes](CHANGES.md)
+ * [Release process](doc/ReleaseProcess.md)
