@@ -1,2 +1,3 @@
-<*.cmx>: for-pack(Nurpawiki)
-<nurpawiki.cmx>: -for-pack(Nurpawiki)
+"src": include
+<src/*.cmx>: for-pack(Nurpawiki)
+<src/nurpawiki.cmx>: -for-pack(Nurpawiki)
