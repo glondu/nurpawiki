@@ -4,8 +4,7 @@ Installation
 Nurpawiki can be installed in various ways.  By far the simplest
 method is to use the Nurpawiki Debian package.
 
-1. Installation via the Nurpawiki Debian package (recommended)
---------------------------------------------------------------
+## 1. Installation via the Nurpawiki Debian package (recommended)
 
 Debian installation: [installing Nurpawiki on
 Debian](NurpawikiDebianInstallation.md).
@@ -13,8 +12,7 @@ Debian](NurpawikiDebianInstallation.md).
 If you successfully installed using the above link, you can stop
 reading now.
 
-2. Installation via source
---------------------------
+## 2. Installation via source
 
 ### Install Postgresql & create a database
 

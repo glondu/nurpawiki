@@ -4,8 +4,7 @@ Nurpawiki installation on Debian
 This page describes how to install Nurpawiki using the [Nurpawiki
 Debian package](http://packages.debian.org/nurpawiki).
 
-1. Package installation
------------------------
+## 1. Package installation
 
 Nurpawiki is currently only in Debian unstable, so it's likely that
 you need to include unstable packages in your `/etc/apt/sources.list`.
@@ -17,8 +16,7 @@ apt-get install postgresql
 apt-get install nurpawiki
 ```
 
-2. Database setup
------------------
+## 2. Database setup
 
 With Bullseye's PostgreSQL (version 12.4), the steps on the SQL server are:
 
@@ -39,8 +37,7 @@ ALTER ${DBUSER} PASSWORD '${DBPASSWORD}';
 
 You can take, for example, DBUSER=ocsigen and DBNAME=nurpawiki (beware of commands executed in psql shell).
 
-3. Ocsigen configuration
-------------------------
+## 3. Ocsigen configuration
 
 A sample template for a configuration file is available in
 `/usr/share/doc/nurpawiki/examples`. Filling it with proper database
@@ -60,8 +57,7 @@ created.
 If everything went right and Ocsigen was properly started, you should
 be able to get into Nurpawiki by browsing to http://localhost:8080
 
-More details
-------------
+## More details
 
 More details are available in
 `/usr/share/doc/nurpawiki/README.Debian`.
