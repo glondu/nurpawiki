@@ -1,10 +1,4 @@
-LIB := -package threads,netstring,calendar,extlib,postgresql,eliom.server,lwt_ppx
-CAMLC := ocamlfind ocamlc -thread -g $(LIB)
-CAMLOPT := ocamlfind ocamlopt -thread  $(LIB)
-CAMLDOC := ocamlfind ocamldoc $(LIB)
-CAMLDEP := ocamlfind ocamldep $(LIB)
-CAMLBUILDOPTS := -ocamlc '$(CAMLC)' -ocamlopt '$(CAMLOPT)' -ocamldep '$(CAMLDEP)'
-CAMLBUILD := ocamlbuild $(CAMLBUILDOPTS)
+CAMLBUILD := ocamlbuild -use-ocamlfind -classic-display
 
 CMA := src/nurpawiki.cma
 CMXA := src/nurpawiki.cmxa
@@ -23,13 +17,13 @@ endif
 all: $(TARGETS) META
 
 $(CMA): src/version.ml
-	$(CAMLBUILD) -classic-display -ocamlc '$(CAMLC)' $@
+	$(CAMLBUILD) $@
 
 $(CMXA): src/version.ml
-	$(CAMLBUILD) -classic-display -ocamlopt '$(CAMLOPT)' $@
+	$(CAMLBUILD) $@
 
-%.cmxs: %.cmxa
-	$(CAMLOPT) -shared -linkall -o _build/$@ _build/$<
+$(CMXS): src/version.ml
+	$(CAMLBUILD) $@
 
 NWIKI_VER=$(shell cat VERSION)
 
