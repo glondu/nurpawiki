@@ -24,8 +24,11 @@ open Types
 let about_page_html =
   [h1 [txt "About Nurpawiki"];
    p
-     [txt ("Nurpawiki v"^Version.version^
-                " Copyright (c) 2007, 2008 Janne Hellsten <jjhellst@gmail.com>");
+     [txt ("Nurpawiki v" ^ Version.version);
+      br ();
+      br ();
+      txt "Copyright © 2007-2008 Janne Hellsten";
+      txt "Copyright © 2008-2020 Stéphane Glondu";
       br ();
       br ();
       txt "See the ";
