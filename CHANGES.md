@@ -10,7 +10,7 @@ dev
 ==================
 
  * Many good patches applied from various people.  Summary below.
- * Bunch of Ltwizations by Stéphane Glondu applied.
+ * Bunch of Lwtizations by Stéphane Glondu applied.
  * Bunch of build flow improvements from Stéphane Glondu
  * Allow specifying the database host in the nurpawiki database
    config.  Thanks Stéphane!
