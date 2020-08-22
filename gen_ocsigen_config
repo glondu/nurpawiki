@@ -34,8 +34,7 @@ sqlite3_path=`ocamlfind query sqlite3`
 cryptokit_path=`ocamlfind query cryptokit`
 
 # The way we find Ocsigen METAS directory is extremely hacky.  I don't
-# know of a better way.  See issue 56 in
-# http://code.google.com/p/nurpawiki/issues/list for more info.
+# know of a better way.
 ocsigen_metas_dir="`ocamlfind printconf stdlib`"
 
 if [ "$DEBUG" != "" ]; then

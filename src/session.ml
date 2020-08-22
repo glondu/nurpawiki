@@ -99,7 +99,7 @@ let login_html ~err =
   let help_text =
     [br (); br ();
      strong [txt "Please read "];
-     Raw.a ~a:[a_id "login_help_url"; a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki/wiki/Tutorial"))] [txt "Nurpawiki tutorial"];
+     Raw.a ~a:[a_id "login_help_url"; a_href (uri_of_string (fun () -> "https://github.com/glondu/nurpawiki/blob/master/doc/Tutorial.md"))] [txt "Nurpawiki tutorial"];
      txt " if you're logging in for the first time.";
      br ()] in
 

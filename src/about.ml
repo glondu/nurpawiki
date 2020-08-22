@@ -29,7 +29,7 @@ let about_page_html =
       br ();
       br ();
       txt "See the ";
-      Raw.a ~a:[a_href (uri_of_string (fun () -> "http://code.google.com/p/nurpawiki"))]
+      Raw.a ~a:[a_href (uri_of_string (fun () -> "https://github.com/glondu/nurpawiki"))]
         [txt "project homepage"];
       txt "."]]
 

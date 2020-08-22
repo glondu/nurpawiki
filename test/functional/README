@@ -1,5 +1,4 @@
 This directory contains .html files that are to be used with Selenium
 Core (or IDE).
 
-See the Nurpawiki wiki docs (http://code.google.com/p/nurpawiki) for
-instructions on how to run the test suite.
+See the Nurpawiki docs for instructions on how to run the test suite.
