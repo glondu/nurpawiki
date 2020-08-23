@@ -1,5 +1,5 @@
-dev
-===
+1.2.4 (2020-08-23)
+==================
 
  * Adoption by Stéphane Glondu and migration to GitHub
  * Use proper connection-dependent PostgreSQL escaping
