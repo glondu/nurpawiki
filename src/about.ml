@@ -28,6 +28,7 @@ let about_page_html =
       br ();
       br ();
       txt "Copyright © 2007-2008 Janne Hellsten";
+      br ();
       txt "Copyright © 2008-2020 Stéphane Glondu";
       br ();
       br ();
