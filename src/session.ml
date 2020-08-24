@@ -103,7 +103,7 @@ let login_html ~err =
      txt " if you're logging in for the first time.";
      br ()] in
 
-  Html_util.html_stub
+  Html_util.html_stub ~title:"Login"
     [div ~a:[a_id "login_outer"]
        [div ~a:[a_id "login_align_middle"]
           [post_form connect_action
@@ -127,11 +127,11 @@ let with_db_installed f =
      an upgrade. *)
   let%lwt b = Dbu.is_schema_installed () in
   if not b then
-    return (Html_util.html_stub (db_installation_error ()))
+    return (Html_util.html_stub ~title:"Database installation error" (db_installation_error ()))
   else
     let%lwt v = Dbu.db_schema_version () in
     if v < Db.nurpawiki_schema_version then
-      return (Html_util.html_stub (db_upgrade_warning ()))
+      return (Html_util.html_stub ~title:"Database upgrade warning" (db_upgrade_warning ()))
     else f ()
 
 (** Wrap page service calls inside with_user_login to have them
@@ -247,9 +247,10 @@ let _ =
   Eliom_registration.Html.register schema_install_page
     (fun () () ->
        Database_schema.install_schema ();%lwt
+       let title = "Database installation completed" in
        return
-         (Html_util.html_stub
-            [h1 [txt "Database installation completed"];
+         (Html_util.html_stub ~title
+            [h1 [txt title];
              p [br ();
                 link_to_nurpawiki_main ()]]))
 
@@ -258,9 +259,10 @@ let _ =
   Eliom_registration.Html.register upgrade_page
     (fun () () ->
        let%lwt msg = Dbu.upgrade_schema () in
+       let title = "Upgrade database schema" in
        return
-         (Html_util.html_stub
-            [h1 [txt "Upgrade DB schema"];
+         (Html_util.html_stub ~title
+            [h1 [txt title];
              (pre [txt msg]);
              p [br ();
                 link_to_nurpawiki_main ()]]))
@@ -270,7 +272,7 @@ let _ =
     (fun () () ->
        Eliom_state.discard ~scope () >>= fun () ->
         return
-          (Html_util.html_stub
+          (Html_util.html_stub ~title:"Logout"
              [h1 [txt "Logged out!"];
               p [br ();
                  link_to_nurpawiki_main ()]]))

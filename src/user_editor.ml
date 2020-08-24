@@ -64,11 +64,11 @@ let rec view_user_admin_page ~err ~cur_user =
                td [a ~service:edit_user_page [txt "Edit"]
                      (Some "user_admin", user.user_login)]])
          users) in
-
+  let title = "Edit users" in
   return
-    (Html_util.html_stub
+    (Html_util.html_stub ~title
        (Html_util.navbar_html ~cur_user
-          ([h1 [txt "Edit users"];
+          ([h1 [txt title];
             users_table] @
              err @
             [post_form ~service:service_create_new_user
@@ -190,9 +190,10 @@ let _ =
 
 
 let rec view_edit_user_page caller ~err ~cur_user user_to_edit =
-  Html_util.html_stub
+  let title = "Edit User" in
+  Html_util.html_stub ~title
     (Html_util.navbar_html ~cur_user
-       ([h1 [txt "Edit User"]] @
+       ([h1 [txt title]] @
           err @
           [post_form ~service:service_save_user_edit
              (fun (passwd,(passwd2,(name,email))) ->

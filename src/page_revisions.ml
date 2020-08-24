@@ -53,10 +53,11 @@ let view_page_revisions page_descr =
   Session.with_guest_login
     (fun cur_user ->
        revision_table page_descr >>= fun revisions ->
+       let title = page_descr ^ " Revisions" in
        return
-         (Html_util.html_stub
+         (Html_util.html_stub ~title
             (Html_util.navbar_html ~cur_user
-               (h1 [txt (page_descr ^ " Revisions")] :: revisions))))
+               (h1 [txt title] :: revisions))))
 
 (* /page_revisions?page_id=<id> *)
 let _ =

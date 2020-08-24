@@ -43,5 +43,5 @@ let _ =
        Session.with_guest_login
          (fun cur_user ->
             return
-              (Html_util.html_stub
+              (Html_util.html_stub ~title:"About"
                  (Html_util.navbar_html ~cur_user about_page_html))))

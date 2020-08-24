@@ -519,14 +519,14 @@ let view_page ~cur_user ?(revision_id=None) page_id page_name ~printable =
   if printable <> None && Option.get printable = true then
     let%lwt page_content =
       wikiml_to_html ~cur_user page_id page_name ~revision_id todos in
-    return & Html_util.html_stub page_content
+    return & Html_util.html_stub ~title:page_name page_content
   else
     let%lwt page_content =
       (wiki_page_contents_html
          ~cur_user
          page_id page_name ~revision_id todos ())
     in
-    return & Html_util.html_stub page_content
+    return & Html_util.html_stub ~title:page_name page_content
 
 (* Parse existing todo's from the current to-be-saved wiki page and
    update the DB relation on what todos are on the page.
@@ -709,7 +709,7 @@ let _ =
       wiki_page_contents_html ~cur_user
          ~revision_id:None
          page_id page_name page_todos ~content:[f] () in
-    return & Html_util.html_stub h
+    return & Html_util.html_stub ~title:("Edit " ^ page_name) h
   in
 
   Eliom_registration.Html.register wiki_edit_page
@@ -727,7 +727,7 @@ let view_wiki_page ~cur_user (page_name, (printable, (revision_id, _))) =
       let f =
         a wiki_edit_page [txt "Create new page"] page_name in
       let%lwt h = wiki_page_menu_html ~cur_user page_name [f] in
-      return & Html_util.html_stub h
+      return & Html_util.html_stub ~title:page_name h
 
 (* /view?p=Page *)
 let _ =
@@ -801,10 +801,11 @@ let _ =
             | SR_todo -> assert false) search_results) in
   let gen_search_page ~cur_user search_str =
     let%lwt search_results = Db.search_wikipage search_str in
+    let title = "Search results" in
     return
-      (Html_util.html_stub
+      (Html_util.html_stub ~title
          (Html_util.navbar_html ~cur_user
-            ([h1 [txt "Search results"]] @ (render_results search_results))))
+            ([h1 [txt title]] @ (render_results search_results))))
   in
 
   Eliom_registration.Html.register search_page

@@ -142,7 +142,7 @@ let view_scheduler_page ~cur_user =
       Form.post_form edit_todo_page table (ET_scheduler, None) in
 
     return &
-    Html_util.html_stub ~javascript:[["nurpawiki_scheduler.js"]]
+    Html_util.html_stub ~title:"Scheduler" ~javascript:[["nurpawiki_scheduler.js"]]
       (Html_util.navbar_html ~cur_user
          ([h1 [txt "Road ahead"]] @ [table'])) in
 
@@ -271,7 +271,7 @@ let rec render_todo_editor ~cur_user (src_page_cont, todos_to_edit) =
 
 
   return &
-  Html_util.html_stub ~javascript:calendar_js
+  Html_util.html_stub ~title:"Edit TODO(s)" ~javascript:calendar_js
     (Html_util.navbar_html ~cur_user
        ((h1 heading)::[help_str; br(); f]))
 

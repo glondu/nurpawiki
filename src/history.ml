@@ -203,7 +203,7 @@ let view_history_page ~cur_user ~nth_page =
                      [tr [td ~a:[a_class ["no_break"; "h_date_heading"]] date_text]] @ lst_acc,
                    prettified_date))
                activity_groups ([],"")))) in
-  return & Html_util.html_stub
+  return & Html_util.html_stub ~title:"History"
     (Html_util.navbar_html ~cur_user
        ([h1 [txt "Blast from the past"]] @
           (page_links nth_page n_total_pages) @ [br (); br ()] @

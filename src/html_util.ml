@@ -33,14 +33,14 @@ let disconnect_box s =
   a ~service:disconnect_page [txt s] ()
 
 (* Use this as the basis for all pages.  Includes CSS etc. *)
-let html_stub ?(javascript=[]) body_html =
+let html_stub ?(javascript=[]) ~title body_html =
   let script src =
     js_script ~a:[a_defer ()] ~uri:(make_static_uri src) () in
   let scripts  =
     script ["nurpawiki.js"] :: (List.map script javascript) in
   html ~a:[a_xmlns `W3_org_1999_xhtml]
     (head
-       (title (txt ""))
+       (Eliom_content.Html.F.title (txt (title ^ " — Nurpawiki")))
        ((scripts) @
           [css_link ~a:[] ~uri:(make_uri ~service:(static_dir ())
                                   ["style.css"]) ();
@@ -136,7 +136,7 @@ let error text =
   span ~a:[a_class ["error"]] [txt text]
 
 let error_page msg =
-  html_stub
+  html_stub ~title:"Error"
     [p [error msg]]
 
 
