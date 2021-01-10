@@ -7,7 +7,7 @@
 
 set -e   # Bail out on errors
 
-site_cma="_build/nurpawiki.cma"
+site_cma="_build/src/nurpawiki.cma"
 static_root="."
 if [ -z $1 ]; then
     true
