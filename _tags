@@ -1,4 +1,4 @@
 "src": include
-<src/*>: thread, package(threads), package(netstring), package(calendar), package(extlib), package(postgresql), package(eliom.server), package(lwt_ppx)
+<src/*>: thread, package(threads), package(netstring), package(calendar), package(extlib), package(postgresql), package(eliom.server), package(lwt_ppx), package(digestif.ocaml), package(hex)
 <src/*.cmx>: for-pack(Nurpawiki)
 <src/nurpawiki.cmx>: -for-pack(Nurpawiki)

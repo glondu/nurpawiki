@@ -23,6 +23,7 @@ open Eliom_service
 open Services
 open Types
 
+module Pass = Password
 module Db = Database
 
 let service_create_new_user =
@@ -118,18 +119,18 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
         return [Html_util.error "Re-typed password doesn't match your password!"]
       else
         begin
-          let passwd_md5 = Digest.to_hex (Digest.string passwd) in
+          let passwd_hash = Pass.salt passwd in
           if update_user then
             begin
               match old_user with
                 Some u ->
                   (* If no password was entered, set it to old value: *)
-                  let new_passwd_md5 =
-                    if passwd = "" then None else Some passwd_md5 in
+                  let new_passwd_hash =
+                    if passwd = "" then None else Some passwd_hash in
                   Db.with_conn
                     (fun conn ->
                        Db.update_user ~conn
-                         ~user_id:u.user_id ~passwd:new_passwd_md5 ~real_name ~email)
+                         ~user_id:u.user_id ~passwd:new_passwd_hash ~real_name ~email)
                   >>= fun _ -> return []
               | None ->
                   assert false
@@ -137,8 +138,8 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
           else
             Db.with_conn
               (fun conn ->
-                 Db.add_user ~conn ~login ~passwd:passwd_md5 ~real_name ~email)
-            >>= fun _ -> return []
+                 Db.add_user ~conn ~login ~passwd:passwd_hash ~real_name ~email)
+            >>= fun () -> return []
         end
 
 let _ =

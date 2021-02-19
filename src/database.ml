@@ -632,5 +632,5 @@ let update_user ~conn~user_id ~passwd ~real_name ~email =
 
 
 (* Highest upgrade schema below must match this version *)
-let nurpawiki_schema_version = 3
+let nurpawiki_schema_version = 4
 

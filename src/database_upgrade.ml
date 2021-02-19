@@ -214,6 +214,19 @@ let upgrade_schema_from_2 ~conn logmsg =
   (* TODO seqs, findwikipage *)
   logged_exec ~conn logmsg "UPDATE nw.version SET schema_version = 3"
 
+(* Version 3 -> 4: change user password handling *)
+let upgrade_schema_from_3 ~conn logmsg =
+
+
+  (* increase this size of the passwd column to be able to store longer hash *)
+  logged_exec ~conn logmsg "ALTER TABLE nw.users ALTER COLUMN passwd TYPE character varying(256)";
+
+  (* add prefix for the new password storage schema *)
+  logged_exec ~conn logmsg "UPDATE nw.users SET passwd = CONCAT('$1$',passwd)";
+
+  (* Update the schema_version number to 4 *)
+  logged_exec ~conn logmsg "UPDATE nw.version SET schema_version = 4"
+
 (* TODO clean up *)
 let db_schema_version_raw conn =
   if table_exists ~conn ~schema:"nw" ~table:"version" then
@@ -245,6 +258,11 @@ let upgrade_schema_raw conn =
     begin
       Buffer.add_string logmsg "Schema is at version 2\n";
       upgrade_schema_from_2 ~conn logmsg
+    end;
+  if db_schema_version_raw conn = 3 then
+    begin
+      Buffer.add_string logmsg "Schema is at version 3\n";
+      upgrade_schema_from_3 ~conn logmsg
     end;
   assert (db_schema_version_raw conn == nurpawiki_schema_version);
   Buffer.contents logmsg

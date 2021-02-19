@@ -25,6 +25,7 @@ open Types
 
 open Config
 
+module Pass = Password
 module Db = Database
 module Dbu = Database_upgrade
 
@@ -145,15 +146,27 @@ let with_user_login ?(allow_read_only=false) f =
           begin
             Db.query_user login
             >>= function
-              | Some user ->
-                  let passwd_md5 = Digest.to_hex (Digest.string passwd) in
-                  (* Autheticate user against his password *)
-                  if passwd_md5 <> user.user_passwd then
-                    return
-                      (login_html
-                         [Html_util.error ("Wrong password given for user '"^login^"'")])
-                  else
-                    f user
+              | Some user -> begin
+                    (* Autheticate user against his password *)
+                    match Pass.check user.user_passwd passwd with
+                    | Result.Ok (update, auth) ->
+                      if not auth then
+                        return
+                          (login_html
+                             [Html_util.error ("Wrong password given for user '"^login^"'")])
+                      else begin
+                        (if update then
+                          Db.with_conn (fun conn ->
+                            Db.update_user ~conn ~user_id:user.user_id
+                                           ~passwd:(Some (Pass.salt passwd))
+                                           ~real_name:user.user_real_name
+                                           ~email:user.user_email)
+                         else return_unit)
+                        >>= fun () ->
+                        f user
+                      end
+                    | Result.Error e -> failwith e (*TODO: change this *)
+                end
               | None ->
                   return
                     (login_html
@@ -196,13 +209,16 @@ let action_with_user_login f =
           begin
             Db.query_user login
             >>= function
-              | Some user ->
-                  let passwd_md5 = Digest.to_hex (Digest.string passwd) in
-                  (* Autheticate user against his password *)
-                  if passwd_md5 = user.user_passwd then
-                    f user
-                  else
-                    return ()
+              | Some user -> begin
+                (* Autheticate user against his password *)
+                match Pass.check user.user_passwd passwd with
+                | Result.Ok (_, auth) ->
+                    if auth then
+                      f user
+                    else
+                      return ()
+                | Result.Error _ -> return ()
+                end
               | None ->
                   return ()
           end
