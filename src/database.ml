@@ -582,15 +582,17 @@ let search_wikipage str = with_conn (fun conn ->
 let user_query_string =
   "SELECT id,login,passwd,real_name,email FROM nw.users"
 
-let user_of_sql_row row =
-  let id = int_of_string (List.nth row 0) in
-  {
-    user_id = id;
-    user_login = (List.nth row 1);
-    user_passwd = (List.nth row 2);
-    user_real_name = (List.nth row 3);
-    user_email = (List.nth row 4);
-  }
+let user_of_sql_row = function
+  | [user_id; user_login; user_passwd; user_real_name; user_email] ->
+    let user_id = int_of_string user_id in
+    {
+      user_id;
+      user_login;
+      user_passwd;
+      user_real_name;
+      user_email;
+    }
+  | _ -> invalid_arg "Database.user_of_sql_row: wrong number of elements in the row for an user"
 
 let query_users () = with_conn (fun conn ->
   let sql = user_query_string ^ " ORDER BY id" in
