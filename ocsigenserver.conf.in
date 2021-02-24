@@ -9,13 +9,10 @@
     <findlib path="%_OCSIGEN_METAS_DIR_%" />
     <extension findlib-package="ocsigen.ext.staticmod" />
 
-    <library module="%_STR_CMA_%"/>
     <library module="%_NUMS_CMA_%"/>
-    <library module="%_PCRE_CMA_%"/>
     <library module="%_CALENDAR_CMA_%"/>
     <library module="%_EXTLIB_CMA_%"/>
     <library module="%_POSTGRESQL_CMA_%"/>
-    <library module="%_CRYPTOKIT_CMA_%"/>
 
     <!-- Sqlite is needed by ocsipersist, which is used by Eliom: -->
     <extension module="%_SQLITE3_CMA_%"/>
@@ -42,5 +39,5 @@
     <commandpipe>./var/run/ocsigen_command</commandpipe>
 
   </server>
-  
+
 </ocsigen>

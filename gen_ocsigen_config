@@ -7,7 +7,7 @@
 
 set -e   # Bail out on errors
 
-site_cma="_build/nurpawiki.cma"
+site_cma="_build/src/nurpawiki.cma"
 static_root="."
 if [ -z $1 ]; then
     true
@@ -23,23 +23,18 @@ fi
 
 stdlib_path=`ocamlfind ocamlc -where`
 
-str_path=`ocamlfind query str`
 nums_path="$stdlib_path"
-pcre_path=`ocamlfind query pcre`
 
 calendar_path=`ocamlfind query calendar`
 extlib_path=`ocamlfind query extlib`
 postgresql_path=`ocamlfind query postgresql`
 sqlite3_path=`ocamlfind query sqlite3`
-cryptokit_path=`ocamlfind query cryptokit`
 
 # The way we find Ocsigen METAS directory is extremely hacky.  I don't
 # know of a better way.
 ocsigen_metas_dir="`ocamlfind printconf stdlib`"
 
 if [ "$DEBUG" != "" ]; then
-    echo $str_path
-    echo $pcre_path
     echo $calendar_path
     echo $extlib_path
     echo $postgresql_path
@@ -81,13 +76,10 @@ fi
 
 cat ocsigenserver.conf.in | \
     sed -e "s|%_OCSIGEN_ROOT_%|$OCSIGEN_ROOT|g" | \
-    sed -e "s|%_STR_CMA_%|${str_path}/str.cma|g" | \
     sed -e "s|%_NUMS_CMA_%|${nums_path}/nums.cma|g" | \
     sed -e "s|%_CALENDAR_CMA_%|${calendar_path}/calendarLib.cmo|g" | \
-    sed -e "s|%_PCRE_CMA_%|${pcre_path}/pcre.cma|g" | \
     sed -e "s|%_EXTLIB_CMA_%|${extlib_path}/extLib.cma|g" | \
     sed -e "s|%_POSTGRESQL_CMA_%|${postgresql_path}/postgresql.cma|g" | \
-    sed -e "s|%_CRYPTOKIT_CMA_%|${cryptokit_path}/cryptokit.cma|g" | \
     sed -e "s|%_STATIC_ROOT_%|${static_root}|g" | \
     sed -e "s|%_NURPAWIKI_CMA_%|${site_cma}|g" | \
     sed -e "s|%_DBNAME_%|${DBNAME}|g" | \
