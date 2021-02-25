@@ -21,27 +21,6 @@ else
     fi
 fi
 
-stdlib_path=`ocamlfind ocamlc -where`
-
-nums_path="$stdlib_path"
-
-calendar_path=`ocamlfind query calendar`
-extlib_path=`ocamlfind query extlib`
-postgresql_path=`ocamlfind query postgresql`
-sqlite3_path=`ocamlfind query sqlite3`
-
-# The way we find Ocsigen METAS directory is extremely hacky.  I don't
-# know of a better way.
-ocsigen_metas_dir="`ocamlfind printconf stdlib`"
-
-if [ "$DEBUG" != "" ]; then
-    echo $calendar_path
-    echo $extlib_path
-    echo $postgresql_path
-    echo $sqlite3_path
-    echo $ocsigen_metas_dir
-fi
-
 mkdir -p var/log
 mkdir -p var/run
 
@@ -75,15 +54,9 @@ if [ "$DBPASSWD" = "" ]; then
 fi
 
 cat ocsigenserver.conf.in | \
-    sed -e "s|%_OCSIGEN_ROOT_%|$OCSIGEN_ROOT|g" | \
-    sed -e "s|%_NUMS_CMA_%|${nums_path}/nums.cma|g" | \
-    sed -e "s|%_CALENDAR_CMA_%|${calendar_path}/calendarLib.cmo|g" | \
-    sed -e "s|%_EXTLIB_CMA_%|${extlib_path}/extLib.cma|g" | \
-    sed -e "s|%_POSTGRESQL_CMA_%|${postgresql_path}/postgresql.cma|g" | \
     sed -e "s|%_STATIC_ROOT_%|${static_root}|g" | \
     sed -e "s|%_NURPAWIKI_CMA_%|${site_cma}|g" | \
     sed -e "s|%_DBNAME_%|${DBNAME}|g" | \
     sed -e "s|%_DBPASSWD_%|${DBPASSWD}|g" | \
-    sed -e "s|%_SQLITE3_CMA_%|${sqlite3_path}/sqlite3.cma|g" | \
     sed -e "s|%_OCSIGEN_METAS_DIR_%|${ocsigen_metas_dir}|g" | \
     sed -e "s|%_DBUSER_%|${DBUSER}|g"

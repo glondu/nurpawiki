@@ -6,16 +6,15 @@
 
     <charset>UTF-8</charset> <!-- Default charset for pages -->
 
-    <findlib path="%_OCSIGEN_METAS_DIR_%" />
-    <extension findlib-package="ocsigen.ext.staticmod" />
+    <extension findlib-package="ocsigenserver.ext.staticmod"/>
 
-    <library module="%_NUMS_CMA_%"/>
-    <library module="%_CALENDAR_CMA_%"/>
-    <library module="%_EXTLIB_CMA_%"/>
-    <library module="%_POSTGRESQL_CMA_%"/>
+    <library findlib-package="num"/>
+    <library findlib-package="calendar"/>
+    <library findlib-package="extlib"/>
+    <library findlib-package="postgresql"/>
 
     <!-- Sqlite is needed by ocsipersist, which is used by Eliom: -->
-    <extension module="%_SQLITE3_CMA_%"/>
+    <extension findlib-package="sqlite3"/>
 
     <extension findlib-package="ocsigenserver.ext.ocsipersist-sqlite"/>
     <extension findlib-package="eliom.server"/>
