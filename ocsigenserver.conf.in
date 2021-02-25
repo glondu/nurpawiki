@@ -12,6 +12,8 @@
     <library findlib-package="calendar"/>
     <library findlib-package="extlib"/>
     <library findlib-package="postgresql"/>
+    <library findlib-package="digestif.ocaml"/>
+    <library findlib-package="hex"/>
 
     <!-- Sqlite is needed by ocsipersist, which is used by Eliom: -->
     <extension findlib-package="sqlite3"/>
