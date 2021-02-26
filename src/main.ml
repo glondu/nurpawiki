@@ -84,8 +84,6 @@ let task_side_effect_mod_priority (task_id, dir) () =
         end
       else return ())
 
-let () = Random.self_init ()
-
 let () =
   Eliom_registration.Action.register
     ~service:task_side_effect_complete_action task_side_effect_complete;
