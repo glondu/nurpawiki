@@ -147,7 +147,7 @@ let with_user_login ?(allow_read_only=false) f =
             Db.query_user login
             >>= function
               | Some user -> begin
-                    (* Autheticate user against his password *)
+                    (* Authenticate user against his password *)
                     match Pass.check user.user_passwd passwd with
                     | Result.Ok (update, auth) ->
                       if not auth then
@@ -210,7 +210,7 @@ let action_with_user_login f =
             Db.query_user login
             >>= function
               | Some user -> begin
-                (* Autheticate user against his password *)
+                (* Authenticate user against his password *)
                 match Pass.check user.user_passwd passwd with
                 | Result.Ok (_, auth) ->
                     if auth then
