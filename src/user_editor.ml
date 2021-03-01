@@ -23,7 +23,6 @@ open Eliom_service
 open Services
 open Types
 
-module Pass = Password
 module Db = Database
 
 let service_create_new_user =
@@ -119,7 +118,7 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
         return [Html_util.error "Re-typed password doesn't match your password!"]
       else
         begin
-          let passwd_hash = Pass.salt passwd in
+          let passwd_hash = Password.salt passwd in
           if update_user then
             begin
               match old_user with

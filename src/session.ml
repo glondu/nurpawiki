@@ -25,7 +25,6 @@ open Types
 
 open Config
 
-module Pass = Password
 module Db = Database
 module Dbu = Database_upgrade
 
@@ -148,7 +147,7 @@ let with_user_login ?(allow_read_only=false) f =
             >>= function
               | Some user -> begin
                     (* Authenticate user against his password *)
-                    match Pass.check user.user_passwd passwd with
+                    match Password.check user.user_passwd passwd with
                     | Result.Ok (update, auth) ->
                       if not auth then
                         return
@@ -158,7 +157,7 @@ let with_user_login ?(allow_read_only=false) f =
                         (if update then
                           Db.with_conn (fun conn ->
                             Db.update_user ~conn ~user_id:user.user_id
-                                           ~passwd:(Some (Pass.salt passwd))
+                                           ~passwd:(Some (Password.salt passwd))
                                            ~real_name:user.user_real_name
                                            ~email:user.user_email)
                          else return_unit)
@@ -211,7 +210,7 @@ let action_with_user_login f =
             >>= function
               | Some user -> begin
                 (* Authenticate user against his password *)
-                match Pass.check user.user_passwd passwd with
+                match Password.check user.user_passwd passwd with
                 | Result.Ok (_, auth) ->
                     if auth then
                       f user
