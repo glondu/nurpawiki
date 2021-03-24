@@ -24,7 +24,7 @@ let check stored_hash password =
         hash_decode#put_string password_hash;
         hash_decode#finish;
         hash_function#add_string (password^salt_decode#get_string);
-        Result.Ok (true, string_equal hash_decode#get_string hash_function#result)
+        Result.Ok (false, string_equal hash_decode#get_string hash_function#result)
       with Error _ -> Result.Error "Failure reading stored hash")
   | _ -> Result.Error "Unknown storage format"
 
