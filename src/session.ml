@@ -250,9 +250,9 @@ let any_task_priority_changes () =
   with Not_found ->
     None
 
-let connect_action_handler () login_nfo =
+let connect_action_handler () login_info =
   Eliom_state.discard ~scope () >>= fun () ->
-    set_password_in_session login_nfo >>= fun () ->
+    set_password_in_session login_info >>= fun () ->
       return ()
 
 let () =
