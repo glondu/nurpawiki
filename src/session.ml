@@ -28,7 +28,8 @@ open Config
 module Db = Database
 module Dbu = Database_upgrade
 
-let seconds_in_day = 60.0 *. 60.0 *. 24.0
+let expiration_time = 60.0 *. 60.0 *. 24.0
+(* 24h *)
 
 let scope_hierarchy = Eliom_common.create_scope_hierarchy "nurpawiki_session_data"
 let scope = `Session scope_hierarchy
@@ -45,7 +46,7 @@ let set_password_in_session login_info =
   let cookie_scope = scope in
   set_service_state_timeout ~cookie_scope None;
   set_persistent_data_state_timeout ~cookie_scope None >>= fun () ->
-  set_persistent_data_cookie_exp_date ~cookie_scope (Some 3153600000.0) >>= fun () ->
+  set_persistent_data_cookie_exp_date ~cookie_scope (Some expiration_time) >>= fun () ->
   Eliom_reference.set login_eref (Some login_info)
 
 let upgrade_page = create ~path:(Path ["upgrade"]) ~meth:(Get unit) ()
