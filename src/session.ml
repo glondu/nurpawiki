@@ -152,7 +152,7 @@ let with_user_login ?(allow_read_only=false) f =
                       if not auth then
                         return
                           (login_html
-                             [Html_util.error ("Wrong password given for user '"^login^"'")])
+                             [Html_util.error ("Bad login or password")])
                       else begin
                         (if update then
                           Db.with_conn (fun conn ->
@@ -169,7 +169,7 @@ let with_user_login ?(allow_read_only=false) f =
               | None ->
                   return
                     (login_html
-                       [Html_util.error ("Unknown user '"^login^"'")])
+                       [Html_util.error ("Bad login or password")])
           end
       | None ->
           if allow_read_only && Config.site.cfg_allow_ro_guests then
