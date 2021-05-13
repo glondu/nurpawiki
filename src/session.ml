@@ -31,8 +31,7 @@ module Dbu = Database_upgrade
 let expiration_time = 60.0 *. 60.0 *. 24.0
 (* 24h *)
 
-let scope_hierarchy = Eliom_common.create_scope_hierarchy "nurpawiki_session_data"
-let scope = `Session scope_hierarchy
+let scope = Eliom_common.default_session_scope
 
 let login_eref = Eliom_reference.eref
   ~scope
@@ -43,7 +42,7 @@ let login_eref = Eliom_reference.eref
    window, re-open it and still retain his logged in status. *)
 let set_password_in_session login_info =
   let open Eliom_state in
-  let cookie_scope = scope in
+  let cookie_scope = Eliom_common.cookie_scope_of_user_scope scope in
   set_service_state_timeout ~cookie_scope None;
   set_persistent_data_state_timeout ~cookie_scope None >>= fun () ->
   set_persistent_data_cookie_exp_date ~cookie_scope (Some expiration_time) >>= fun () ->
