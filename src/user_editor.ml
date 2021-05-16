@@ -218,11 +218,14 @@ let _ =
                            ~update_user:true
                            ~login:login
                            ~passwd ~passwd2 ~real_name ~email >>= fun err ->
-                       (* Update password in the session if we're editing current
+                       (* Update user in the session if we're editing current
                           user: *)
-                       (if err = [] && passwd <> "" && cur_user.user_login = login
-                        then Session.update_session_password login passwd
-                        else return ()
+                       (if err = [] && cur_user.user_login = login
+                       then 
+                         Db.query_user login >>= function
+                           | Some u -> Session.update_session (User u)
+                           | None -> return_unit (* TODO: what should we do here *)
+                       else return_unit
                        ) >>= fun () ->
                        Session.with_user_login
                          (fun cur_user ->
