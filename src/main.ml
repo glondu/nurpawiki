@@ -262,7 +262,7 @@ module WikiML =
         else (* External link *)
           let url = scheme^":"^page in
           let t = if text = "" then url else text in
-          return & Raw.a ~a:[a_href (uri_of_string (fun () -> url))] [txt t] in
+          return & Raw.a ~a:[a_href (uri_of_string (fun () -> url))] [ext_img; txt t] in
 
       let add_html html_acc html =
         html::html_acc in
