@@ -142,7 +142,7 @@ let save_user ~update_user ~login ~passwd ~passwd2 ~real_name ~email =
         end
 
 let _ =
-  Eliom_registration.Html.register service_create_new_user
+  Eliom_registration.Html.register ~service:service_create_new_user
     (fun () (login, (passwd, (passwd2, (real_name, email))))  ->
        Session.with_user_login
          (fun cur_user ->
@@ -179,7 +179,7 @@ let save_user_prefs c_passwd c_passwd2 (c_name,old_name) (c_email,old_email) =
         ])
 
 let _ =
-  Eliom_registration.Html.register user_admin_page
+  Eliom_registration.Html.register ~service:user_admin_page
     (fun _ () ->
        Session.with_user_login
          (fun cur_user ->
@@ -205,7 +205,7 @@ let rec view_edit_user_page caller ~err ~cur_user user_to_edit =
 
 
 let _ =
-  Eliom_registration.Html.register service_save_user_edit
+  Eliom_registration.Html.register ~service:service_save_user_edit
     (fun (caller, login) (passwd, (passwd2, (real_name, email)))  ->
        Session.with_user_login
          (fun cur_user ->
@@ -247,7 +247,7 @@ let _ =
 
 
 let _ =
-  Eliom_registration.Html.register edit_user_page
+  Eliom_registration.Html.register ~service:edit_user_page
     (fun (caller, editing_login) () ->
        Session.with_user_login
          (fun cur_user ->

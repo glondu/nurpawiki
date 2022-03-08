@@ -38,7 +38,7 @@ let about_page_html =
       txt "."]]
 
 let _ =
-  Eliom_registration.Html.register about_page
+  Eliom_registration.Html.register ~service:about_page
     (fun () () ->
        Session.with_guest_login
          (fun cur_user ->

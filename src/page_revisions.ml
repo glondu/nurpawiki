@@ -61,6 +61,6 @@ let view_page_revisions page_descr =
 
 (* /page_revisions?page_id=<id> *)
 let _ =
-  Eliom_registration.Html.register page_revisions_page
+  Eliom_registration.Html.register ~service:page_revisions_page
     (fun page_descr () ->
        view_page_revisions page_descr)

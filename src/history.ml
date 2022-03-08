@@ -211,7 +211,7 @@ let view_history_page ~cur_user ~nth_page =
 
 (* /history *)
 let _ =
-  Eliom_registration.Html.register history_page
+  Eliom_registration.Html.register ~service:history_page
     (fun nth_page () ->
        Session.with_guest_login
          (fun cur_user ->

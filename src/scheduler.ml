@@ -139,7 +139,7 @@ let view_scheduler_page ~cur_user =
          ] in
 
     let table' =
-      Form.post_form edit_todo_page table (ET_scheduler, None) in
+      Form.post_form ~service:edit_todo_page table (ET_scheduler, None) in
 
     return &
     Html_util.html_stub ~title:"Scheduler" ~javascript:[["nurpawiki_scheduler.js"]]
@@ -157,7 +157,7 @@ let render_edit_todo_cont_page ~cur_user = function
 
 (* /scheduler *)
 let _ =
-  Eliom_registration.Html.register scheduler_page
+  Eliom_registration.Html.register ~service:scheduler_page
     (fun todo_id () ->
        Session.with_guest_login
          (fun cur_user ->
@@ -167,7 +167,7 @@ let scheduler_page_discard_todo_id =
   Eliom_registration.Html.create
     ~path:(Path ["scheduler"])
     ~meth:(Get ((user_type
-                   et_cont_of_string string_of_et_cont "src_service")))
+                   ~of_string:et_cont_of_string ~to_string:string_of_et_cont "src_service")))
     (fun src_page_cont () ->
        Session.with_user_login
          (fun cur_user ->
@@ -289,7 +289,7 @@ let render_todo_get_page ~cur_user (src_page_cont, todo) =
       render_edit_todo_cont_page ~cur_user src_page_cont
 
 let _ =
-  Eliom_registration.Html.register edit_todo_get_page
+  Eliom_registration.Html.register ~service:edit_todo_get_page
     (fun get_params () ->
        Session.with_user_login
          (fun cur_user ->
@@ -312,7 +312,7 @@ let parse_todo_ids todo_ids =
 
 
 let _ =
-  Eliom_registration.Html.register edit_todo_page
+  Eliom_registration.Html.register ~service:edit_todo_page
     (fun (src_page_cont, single_tid) (todo_ids : (string * string) list) ->
        Session.with_user_login
          (fun cur_user ->

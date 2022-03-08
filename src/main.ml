@@ -254,7 +254,7 @@ module WikiML =
           let t = if text = "" then page else text in
           let%lwt b = Db.wiki_page_exists page in
           if b then
-            a wiki_view_page [txt t] (page, (None, (None, None))) |> return
+            a ~service:wiki_view_page [txt t] (page, (None, (None, None))) |> return
           else
             a ~a:[a_class ["missing_page"]]
               ~service:wiki_view_page [txt t]
@@ -696,7 +696,7 @@ let _ =
     let wikitext =
       String.concat "\n" (WikiML.wikitext_of_preprocessed_lines preproc_wikitext) in
     let f =
-      post_form service_save_page_post
+      post_form ~service:service_save_page_post
         (fun chain ->
            [(p [input ~input_type:`Submit ~value:"Save" Form.string;
                 Html_util.cancel_link wiki_view_page
@@ -712,7 +712,7 @@ let _ =
     return & Html_util.html_stub ~title:("Edit " ^ page_name) h
   in
 
-  Eliom_registration.Html.register wiki_edit_page
+  Eliom_registration.Html.register ~service:wiki_edit_page
     (fun page_name () ->
        Session.with_user_login
          (fun cur_user ->
@@ -725,13 +725,13 @@ let view_wiki_page ~cur_user (page_name, (printable, (revision_id, _))) =
       view_page ~cur_user ~revision_id page_id page_name ~printable
   | None ->
       let f =
-        a wiki_edit_page [txt "Create new page"] page_name in
+        a ~service:wiki_edit_page [txt "Create new page"] page_name in
       let%lwt h = wiki_page_menu_html ~cur_user page_name [f] in
       return & Html_util.html_stub ~title:page_name h
 
 (* /view?p=Page *)
 let _ =
-  Eliom_registration.Html.register wiki_view_page
+  Eliom_registration.Html.register ~service:wiki_view_page
     (fun ((_, (_, (_, force_login))) as params) () ->
        (* If forced login is not requested, we'll let read-only guests
           in (if current configuration allows it) *)
@@ -763,7 +763,7 @@ let _ =
            (head (title (txt "")) [])
            (body [p [txt "invalid 'test' param!"]])) in
 
-  Eliom_registration.Html.register benchmark_page
+  Eliom_registration.Html.register ~service:benchmark_page
     (fun test_id () ->
        return (gen_html test_id))
 
@@ -808,9 +808,9 @@ let _ =
             ([h1 [txt title]] @ (render_results search_results))))
   in
 
-  Eliom_registration.Html.register search_page
+  Eliom_registration.Html.register ~service:search_page
     (fun search_str () ->
        Session.with_guest_login
          (fun cur_user ->
-            gen_search_page cur_user search_str))
+            gen_search_page ~cur_user search_str))
 

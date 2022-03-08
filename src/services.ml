@@ -38,7 +38,7 @@ let scheduler_page = create ~path:(Path ["scheduler"]) ~meth:(Get unit) ()
 
 let edit_todo_get_page = create ~path:(Path ["edit_todo"])
   ~meth:(Get ((user_type
-      et_cont_of_string string_of_et_cont "src_service") **
+      ~of_string:et_cont_of_string ~to_string:string_of_et_cont "src_service") **
      (opt (int "tid")))) ()
 
 let edit_todo_page =

@@ -110,7 +110,7 @@ let login_html ~err =
   Html_util.html_stub ~title:"Login"
     [div ~a:[a_id "login_outer"]
        [div ~a:[a_id "login_align_middle"]
-          [post_form connect_action
+          [post_form ~service:connect_action
              (fun (loginname,passwd) ->
                 [table ~a:[a_class ["login_box"]]
                    [tr [td ~a:[a_class ["login_text"]]
@@ -147,7 +147,7 @@ let with_user_login ?(allow_read_only=false) f =
     >>= function
       | Some (User user) -> f user
       | Some Failed -> Eliom_reference.unset login_eref
-          >>= fun () -> return (login_html [Html_util.error ("Bad login or password")])
+          >>= fun () -> return (login_html ~err:[Html_util.error ("Bad login or password")])
       | None ->
           if allow_read_only && Config.site.cfg_allow_ro_guests then
             let guest_user =
@@ -160,7 +160,7 @@ let with_user_login ?(allow_read_only=false) f =
               } in
             f guest_user
           else
-            return (login_html [])
+            return (login_html ~err:[])
   in
   with_db_installed login
 
@@ -236,7 +236,7 @@ let () =
 
 (* /schema_install initializes the database schema (if needed) *)
 let () =
-  Eliom_registration.Html.register schema_install_page
+  Eliom_registration.Html.register ~service:schema_install_page
     (fun () () ->
        Database_schema.install_schema ();%lwt
        let title = "Database installation completed" in
@@ -248,7 +248,7 @@ let () =
 
 (* /upgrade upgrades the database schema (if needed) *)
 let () =
-  Eliom_registration.Html.register upgrade_page
+  Eliom_registration.Html.register ~service:upgrade_page
     (fun () () ->
        let%lwt msg = Dbu.upgrade_schema () in
        let title = "Upgrade database schema" in
@@ -260,7 +260,7 @@ let () =
                 link_to_nurpawiki_main ()]]))
 
 let () =
-  Eliom_registration.Html.register disconnect_page
+  Eliom_registration.Html.register ~service:disconnect_page
     (fun () () ->
        Eliom_state.discard ~scope () >>= fun () ->
         return

@@ -27,7 +27,7 @@ open Types
 open Services
 
 let make_static_uri name =
-  make_uri (static_dir ()) name
+  make_uri ~service:(static_dir ()) name
 
 let disconnect_box s =
   a ~service:disconnect_page [txt s] ()
@@ -68,7 +68,7 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
        txt "History"] None in
 
   let search_input =
-    [get_form search_page
+    [get_form ~service:search_page
        (fun (chain : ([`One of string] param_name)) ->
           [p [input ~input_type:`Submit ~value:"Search" Form.string;
               input ~input_type:`Text ~name:chain Form.string]])] in
