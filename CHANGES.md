@@ -1,3 +1,12 @@
+dev
+===
+
+ * Add proper titles to pages
+ * Store password with salt and SHA3_512 (GitHub PR #2)
+   - Bump schema version (to 4)
+ * Change session handling (GitHub PR #4)
+
+
 1.2.4 (2020-08-23)
 ==================
 
