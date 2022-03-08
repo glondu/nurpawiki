@@ -61,13 +61,13 @@ module ConnectionPool =
                (match c#status with
                   Ok ->
                     f c
-                | Bad ->
+                | _ ->
                     Ocsigen_messages.errlog "Database connection bad.  Trying reset";
                     c#reset;
                     match c#status with
                       Ok ->
                         f c
-                    | Bad ->
+                    | _ ->
                         Ocsigen_messages.errlog "Database connection still bad.  Bail out";
                         raise (Error (Psql.Connection_failure "bad connection")))
            | None ->
