@@ -28,25 +28,29 @@ open Config
 module Db = Database
 module Dbu = Database_upgrade
 
-let seconds_in_day = 60.0 *. 60.0 *. 24.0
+type login_status = Failed | User of Types.user
 
-let scope_hierarchy = Eliom_common.create_scope_hierarchy "nurpawiki_session_data"
-let scope = `Session scope_hierarchy
+let expiration_time = 60.0 *. 60.0 *. 24.0
+(* 24h *)
 
-let login_eref = Eliom_reference.eref
-  ~scope
-  ~persistent:"login_info" None
+let scope = Eliom_common.default_session_scope
 
-(* Set password & login into session.  We set the cookie expiration
-   into 24h from now so that the user can even close his browser
-   window, re-open it and still retain his logged in status. *)
-let set_password_in_session login_info =
-  let open Eliom_state in
-  let cookie_scope = scope in
-  set_service_state_timeout ~cookie_scope None;
-  set_persistent_data_state_timeout ~cookie_scope None >>= fun () ->
-  set_persistent_data_cookie_exp_date ~cookie_scope (Some 3153600000.0) >>= fun () ->
-  Eliom_reference.set login_eref (Some login_info)
+let group_scope = Eliom_common.default_group_scope
+
+let login_eref = Eliom_reference.eref ~scope:group_scope None
+
+(* Set user session in the group session, so login_eref is kept
+   synchronized between each session. *)
+let set_login_status_in_session login_status =
+  begin
+    match login_status with
+    | Failed -> Lwt.return_unit
+    | User user ->
+        Eliom_state.set_volatile_data_session_group ~scope user.user_login;
+        Eliom_state.set_service_session_group ~scope user.user_login;
+        Eliom_state.set_persistent_data_session_group ~scope user.user_login
+  end
+  >>= fun () -> Eliom_reference.set login_eref (Some login_status)
 
 let upgrade_page = create ~path:(Path ["upgrade"]) ~meth:(Get unit) ()
 
@@ -63,8 +67,8 @@ let link_to_nurpawiki_main sp =
     [txt "Take me to Nurpawiki"]
     (Config.site.cfg_homepage,(None,(None,None)))
 
-(* Get logged in user as an option *)
-let get_login_user () =
+(* Get logged in status as an option *)
+let get_login_status () =
   Eliom_reference.get login_eref
 
 let db_upgrade_warning () =
@@ -139,38 +143,11 @@ let with_db_installed f =
     not logged in. *)
 let with_user_login ?(allow_read_only=false) f =
   let login () =
-    get_login_user ()
+    get_login_status ()
     >>= function
-      | Some (login,passwd) ->
-          begin
-            Db.query_user login
-            >>= function
-              | Some user -> begin
-                    (* Authenticate user against his password *)
-                    match Password.check user.user_passwd passwd with
-                    | Result.Ok (update, auth) ->
-                      if not auth then
-                        return
-                          (login_html
-                             [Html_util.error ("Wrong password given for user '"^login^"'")])
-                      else begin
-                        (if update then
-                          Db.with_conn (fun conn ->
-                            Db.update_user ~conn ~user_id:user.user_id
-                                           ~passwd:(Some (Password.salt passwd))
-                                           ~real_name:user.user_real_name
-                                           ~email:user.user_email)
-                         else return_unit)
-                        >>= fun () ->
-                        f user
-                      end
-                    | Result.Error e -> failwith e (*TODO: change this *)
-                end
-              | None ->
-                  return
-                    (login_html
-                       [Html_util.error ("Unknown user '"^login^"'")])
-          end
+      | Some (User user) -> f user
+      | Some Failed -> Eliom_reference.unset login_eref
+          >>= fun () -> return (login_html [Html_util.error ("Bad login or password")])
       | None ->
           if allow_read_only && Config.site.cfg_allow_ro_guests then
             let guest_user =
@@ -202,33 +179,17 @@ let with_guest_login f =
 let action_with_user_login f =
   let%lwt db_version = Dbu.db_schema_version () in
   if db_version = Db.nurpawiki_schema_version then
-    get_login_user ()
+    get_login_status ()
     >>= function
-      | Some (login,passwd) ->
-          begin
-            Db.query_user login
-            >>= function
-              | Some user -> begin
-                (* Authenticate user against his password *)
-                match Password.check user.user_passwd passwd with
-                | Result.Ok (_, auth) ->
-                    if auth then
-                      f user
-                    else
-                      return ()
-                | Result.Error _ -> return ()
-                end
-              | None ->
-                  return ()
-          end
-      | None -> return ()
+      | Some (User user) -> f user
+      | _ -> return ()
  else
    return ()
 
 
-let update_session_password login new_password =
+let update_session user =
   Eliom_state.discard ~scope () >>= fun () ->
-  set_password_in_session (login, new_password)
+  set_login_status_in_session user
 
 (* Check session to see what happened during page servicing.  If any
    actions were called, some of them might've set values into session
@@ -249,16 +210,32 @@ let any_task_priority_changes () =
   with Not_found ->
     None
 
-let connect_action_handler () login_nfo =
+let connect_action_handler () (login, passwd) =
   Eliom_state.discard ~scope () >>= fun () ->
-    set_password_in_session login_nfo >>= fun () ->
-      return ()
+  Db.query_user login >>= function
+  | Some user -> (
+      (* Authenticate user against his password *)
+      match Password.check user.user_passwd passwd with
+      | Result.Ok (update, auth) ->
+          if not auth then set_login_status_in_session Failed
+          else
+            (if update then
+             Db.with_conn (fun conn ->
+                 Db.update_user ~conn ~user_id:user.user_id
+                   ~passwd:(Some (Password.salt passwd))
+                   ~real_name:user.user_real_name ~email:user.user_email)
+            else return_unit)
+            >>= fun () -> set_login_status_in_session (User user)
+      | Result.Error e -> set_login_status_in_session Failed (*TODO: change this *))
+  | None ->
+      set_login_status_in_session Failed
 
 let () =
-  Eliom_registration.Action.register ~service:connect_action connect_action_handler
+  Eliom_registration.Action.register
+  ~service:connect_action connect_action_handler
 
 (* /schema_install initializes the database schema (if needed) *)
-let _ =
+let () =
   Eliom_registration.Html.register schema_install_page
     (fun () () ->
        Database_schema.install_schema ();%lwt
@@ -270,7 +247,7 @@ let _ =
                 link_to_nurpawiki_main ()]]))
 
 (* /upgrade upgrades the database schema (if needed) *)
-let _ =
+let () =
   Eliom_registration.Html.register upgrade_page
     (fun () () ->
        let%lwt msg = Dbu.upgrade_schema () in
@@ -282,7 +259,7 @@ let _ =
              p [br ();
                 link_to_nurpawiki_main ()]]))
 
-let _ =
+let () =
   Eliom_registration.Html.register disconnect_page
     (fun () () ->
        Eliom_state.discard ~scope () >>= fun () ->
