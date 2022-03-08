@@ -27,9 +27,11 @@ let about_page_html =
      [txt ("Nurpawiki v" ^ Version.version);
       br ();
       br ();
-      txt "Copyright © 2007-2008 Janne Hellsten";
+      txt "Copyright © 2006-2008 Janne Hellsten";
       br ();
-      txt "Copyright © 2008-2020 Stéphane Glondu";
+      txt "Copyright © 2008-2022 Stéphane Glondu";
+      br ();
+      txt "Copyright © 2021 Fardale";
       br ();
       br ();
       txt "See the ";
