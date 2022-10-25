@@ -29,8 +29,6 @@ open Types
 open Util
 open CalendarLib
 
-let ( & ) f x = f x
-
 module Db = Database
 
 let clamp_date_to_today date =
@@ -141,7 +139,7 @@ let view_scheduler_page ~cur_user =
     let table' =
       Form.post_form ~service:edit_todo_page table (ET_scheduler, None) in
 
-    return &
+    return @@
     Html_util.html_stub ~title:"Scheduler" ~javascript:[["nurpawiki_scheduler.js"]]
       (Html_util.navbar_html ~cur_user
          ([h1 [txt "Road ahead"]] @ [table'])) in
@@ -256,7 +254,7 @@ let rec render_todo_editor ~cur_user (src_page_cont, todos_to_edit) =
             [tr [td [Form.input ~input_type:`Submit ~value:"Save" Form.string;
                      cancel_page src_page_cont]]])] in
 
-    return &
+    return @@
     Form.post_form ~service:service_save_todo_item create_listform src_page_cont in
 
   let heading = [txt ("Edit TODOs "^todos_str)] in
@@ -270,7 +268,7 @@ let rec render_todo_editor ~cur_user (src_page_cont, todos_to_edit) =
      ["nurpawiki_calendar.js"]] in
 
 
-  return &
+  return @@
   Html_util.html_stub ~title:"Edit TODO(s)" ~javascript:calendar_js
     (Html_util.navbar_html ~cur_user
        ((h1 heading)::[help_str; br(); f]))
