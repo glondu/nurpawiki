@@ -71,7 +71,7 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
   let search_input =
     [get_form ~service:search_page
        (fun (chain : ([`One of string] param_name)) ->
-          [p [input ~input_type:`Submit ~value:"Search" Form.string;
+           [p [input ~a:[a_class ["button"]] ~input_type:`Submit ~value:"Search" Form.string;
               input ~input_type:`Text ~name:chain Form.string]])] in
 
   (* Greet user and offer Login link if guest *)
@@ -128,10 +128,11 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
   @
     (if top_info_bar = [] then [] else [div ~a:[a_id "top_action_bar"] top_info_bar])
   @
-    [div ~a:[a_id "navbar"]
+    [div ~a:[a_id "page"; a_class ["grid-container"]]
+      [div ~a:[a_id "navbar";]
        (user_greeting @ [br ()] @ search_input @ wiki_revisions_link @ todo_list_table);
-     div ~a:[a_id "content"]
-       content]
+        div ~a:[a_id "content"]
+        content]]
 
 let error text =
   span ~a:[a_class ["error"]] [txt text]

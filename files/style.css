@@ -1,7 +1,22 @@
-body { 
-     font-family: Verdana,Geneva,Arial,Sans-serif; 
-	font-size: 12px; 
-	background-color : #FFFFFF 
+ * {
+  box-sizing: border-box;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 10px;
+  padding: 10px;
+}
+
+@media only screen and (min-width: 768px) {
+    .grid-container { grid-template-columns: 300px auto;}
+}
+
+body {
+    font-family: Verdana,Geneva,Arial,Sans-serif;
+	font-size: 12px;
+	background-color : #FFFFFF
 }
 
 img {
@@ -101,7 +116,7 @@ h1 {
 }
 
 h1.left_aligned {
-  text-align: left; 
+  text-align: left;
 }
 
 h4 {
@@ -139,7 +154,7 @@ html, body {
 
 #login_align_middle {
   position:absolute;
-  top: 35%; 
+  top: 35%;
   left: 30%;
   text-align:left;
   padding: 5px;
@@ -174,7 +189,7 @@ table.login_box {
   color:#000;
 }
 
-.undo_link { 
+.undo_link {
   color:#338;
 }
 
@@ -202,17 +217,13 @@ table.login_box {
 }
 
 #navbar {
-	width: 300px;
-	float: left;
-	margin-left: 0px;
 	margin-top: 2px;
 	padding: 12px;
+    background-color: #f1f1f1;
 }
-	
-	
+
 #content {
 	padding: 5px;
-	margin-left: 400px;
 }
 
 a#login_help_url {
