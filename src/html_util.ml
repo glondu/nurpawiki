@@ -129,8 +129,8 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
     (if top_info_bar = [] then [] else [div ~a:[a_id "top_action_bar"] top_info_bar])
   @
     [div ~a:[a_id "page"; a_class ["grid-container"]]
-      [div ~a:[a_id "navbar";]
-       (user_greeting @ [br ()] @ search_input @ wiki_revisions_link @ todo_list_table);
+      [div [div ~a:[a_id "navbar";]
+      (user_greeting @ [br ()] @ search_input @ wiki_revisions_link @ todo_list_table)];
         div ~a:[a_id "content"]
         content]]
 
