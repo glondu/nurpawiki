@@ -463,12 +463,13 @@ let wiki_page_menu_html ~cur_user page content =
 
   let edit_link =
     [a ~service:wiki_edit_page ~a:[a_accesskey '1'; a_class ["ak"]]
-       [img ~alt:"Edit" ~src:(make_static_uri ["edit.png"]) ();
-        txt "Edit page"] page] in
+       [div ~a:[a_class ["center-horizontal"]] [img ~alt:"Edit" ~src:(make_static_uri ["edit.png"]) ();
+        txt "Edit page"]] page] in
 
   let printable_link =
     [a ~service:wiki_view_page
-       ~a:[a_accesskey 'p'; a_class ["ak"]] [txt "Print"]
+       ~a:[a_accesskey 'p'; a_class ["ak"]]
+       [div ~a:[a_class ["center-horizontal"]] [txt "Print"]]
        (page, (Some true,(None,None)))] in
 
   let revisions_link =
@@ -493,7 +494,7 @@ let wiki_page_menu_html ~cur_user page content =
               [txt "Undo"] id]] in
 
   return @@ Html_util.navbar_html ~cur_user
-    ~wiki_page_links:(edit_link @ [txt " "] @  printable_link)
+    ~wiki_page_links:(edit_link @  printable_link)
     ~wiki_revisions_link:revisions_link
     ~top_info_bar
     ~todo_list_table:[todo_list] content

@@ -55,18 +55,18 @@ let is_guest user =
 let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_page_links=[]) ?(todo_list_table=[]) content =
   let home_link link_text =
     a ~service:wiki_view_page
-      ~a:[a_accesskey 'h'; a_class ["ak"]] link_text
+      ~a:[a_accesskey 'h'] link_text
       (Config.site.cfg_homepage, (None, (None, None))) in
   let scheduler_link =
     a ~service:scheduler_page
-      ~a:[a_accesskey 'r'; a_class ["ak"]]
-      [img ~alt:"Scheduler" ~src:(make_static_uri ["calendar.png"]) ();
-       txt "Scheduler"] () in
+      ~a:[a_accesskey 'r']
+      [div ~a:[a_class ["center-horizontal"]] [img ~alt:"Scheduler" ~src:(make_static_uri ["calendar.png"]) ();
+       txt "Scheduler"]] () in
   let history_link =
     a ~service:history_page
-      ~a:[a_accesskey 'r'; a_class ["ak"]]
-      [img ~alt:"History" ~src:(make_static_uri ["home.png"]) ();
-       txt "History"] None in
+      ~a:[a_accesskey 'r']
+      [div ~a:[a_class ["center-horizontal"]] [img ~alt:"History" ~src:(make_static_uri ["home.png"]) ();
+       txt "History"]] None in
 
   let search_input =
     [get_form ~service:search_page
@@ -90,42 +90,32 @@ let navbar_html ~cur_user ?(top_info_bar=[]) ?(wiki_revisions_link=[]) ?(wiki_pa
         [] in
 
   let disconnect_link =
-    if is_guest cur_user then [] else [disconnect_box "Logout"] in
+    if is_guest cur_user then [] else [li ~a:[a_class ["right"]] [disconnect_box "Logout"]] in
 
   let my_preferences_link =
     if is_guest cur_user then
       []
     else
-      [a ~service:edit_user_page [txt "My Preferences"]
-         (None,cur_user.user_login)] in
+      [li ~a:[a_class ["right"]] [a ~service:edit_user_page [txt "My Preferences"]
+      (None,cur_user.user_login)]] in
 
   let edit_users_link =
     if Privileges.can_view_users cur_user then
-      [a ~service:user_admin_page [txt "Edit Users"] ()]
+      [li ~a:[a_class ["right"]] [a ~service:user_admin_page [txt "Edit Users"] ()]]
     else
       [] in
 
-  [div ~a:[a_id "topbar"]
-     [table ~a:[a_class ["top_menu_size"]]
-        [tr
-           [td ~a:[a_class ["top_menu_left_align"]]
-              [table
-                 [tr [td [home_link
-                            [img ~alt:"Home" ~src:(make_static_uri ["home.png"]) ();
-                             txt "Home"]];
-                      td [scheduler_link];
-                      td [history_link];
-                      td wiki_page_links]]
-                 ];
-            td ~a:[a_class ["top_menu_right_align"]]
-              ([a ~service:about_page [txt "About"] ()] @
-                 [txt " "] @
-                 my_preferences_link @
-                 [txt " "] @
-                 edit_users_link @
-                 [txt " "] @
-                 disconnect_link)]]]]
-  @
+  ul ~a:[a_class ["top_menu_size"; "topbar"]]
+    ([li [home_link [div ~a:[a_class ["center-horizontal"]] [img ~alt:"Home"
+            ~src:(make_static_uri ["home.png"]) (); txt "Home"]]];
+       li [scheduler_link];
+       li [history_link]] @
+       List.map (fun l -> li [l]) wiki_page_links @
+       [li ~a:[a_class ["right"]]  [a ~service:about_page [txt "About"] ()]] @
+          my_preferences_link @
+          edit_users_link @
+          disconnect_link)
+  ::
     (if top_info_bar = [] then [] else [div ~a:[a_id "top_action_bar"] top_info_bar])
   @
     [div ~a:[a_id "page"; a_class ["grid-container"]]
