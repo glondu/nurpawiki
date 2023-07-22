@@ -41,7 +41,8 @@ let html_stub ?(javascript=[]) ~title body_html =
   html ~a:[a_xmlns `W3_org_1999_xhtml]
     (head
        (Eliom_content.Html.F.title (txt (title ^ " — Nurpawiki")))
-        (css_link ~a:[] ~uri:(make_uri ~service:(static_dir ())
+       (meta ~a:[ a_name "viewport"; a_content "width=device-width, initial-scale=1" ] () ::
+        css_link ~a:[] ~uri:(make_uri ~service:(static_dir ())
                                   ["style.css"]) ()::
         css_link ~a:[] ~uri:(make_uri ~service:(static_dir ())
                                     ["jscalendar"; "calendar-blue2.css"]) ()::
