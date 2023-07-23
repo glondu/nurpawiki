@@ -33,19 +33,7 @@ module Psql = Postgresql
 module P = Printf
 
 (* TODO no need to extract here *)
-let matches_pcre rex s =
-  try ignore (Pcre.extract ~rex s); true with Not_found -> false
-
-let ( |> ) f g = g f
-let ( & ) f g = f g
-
-let rec filter_map f = function
-  | [] -> return []
-  | x::xs ->
-    let%lwt ys = filter_map f xs in
-    match%lwt f x with
-      | Some y -> return & y::ys
-      | None -> return ys
+let matches_pcre rex s = Pcre.pmatch ~rex s
 
 let newline_re = Pcre.regexp "\n"
 
@@ -57,7 +45,7 @@ let task_side_effect_complete task_id () =
         begin
           Db.complete_task ~user_id:user.user_id task_id;%lwt
           let table = Eliom_request_info.get_request_cache () in
-          return & Polytables.set ~table ~key:action_completed_task ~value:task_id
+          return @@ Polytables.set ~table ~key:action_completed_task ~value:task_id
         end
       else return ())
 
@@ -80,7 +68,7 @@ let task_side_effect_mod_priority (task_id, dir) () =
           else
             Db.up_task_priority task_id;%lwt
           let table = Eliom_request_info.get_request_cache () in
-          return & Polytables.set ~table ~key:action_task_priority_changed ~value:task_id
+          return @@ Polytables.set ~table ~key:action_task_priority_changed ~value:task_id
         end
       else return ())
 
@@ -262,7 +250,7 @@ module WikiML =
         else (* External link *)
           let url = scheme^":"^page in
           let t = if text = "" then url else text in
-          return & Raw.a ~a:[a_href (uri_of_string (fun () -> url))] [ext_img; txt t] in
+          return @@ Raw.a ~a:[a_href (uri_of_string (fun () -> url))] [ext_img; txt t] in
 
       let add_html html_acc html =
         html::html_acc in
@@ -301,7 +289,7 @@ module WikiML =
 
         let wiki_error s charpos =
           let s = (String.sub s charpos ((String.length s)-charpos)) in
-          return &
+          return @@
           add_html acc
             (Html_util.error
                ("WIKI SYNTAX ERROR on line: '"^s^"'")) in
@@ -383,7 +371,7 @@ module WikiML =
               let (after_bullets,bullets) =
                 take_while is_list_or_empty lst in
               let%lwt list_items =
-                filter_map
+                Lwt_list.filter_map_s
                   (function
                        (`Wiki e) as wl ->
                          if matches_pcre ws_or_empty_re e then
@@ -395,7 +383,7 @@ module WikiML =
                                Some r ->
                                  let n_stars = String.length r.(1) in
                                  let%lwt x = parse_text [] r.(2) in
-                                 return & Some (n_stars, x)
+                                 return @@ Some (n_stars, x)
                              | None ->
                                  assert false
                            end
@@ -418,7 +406,7 @@ module WikiML =
             end
         | (`NoWiki x::xs) ->
             loop (pre [txt (String.concat "\n" x)]::acc) xs
-        | [] -> return & List.rev acc in
+        | [] -> return @@ List.rev acc in
 
       loop [] preprocessed_lines
 
@@ -446,7 +434,7 @@ let todo_list_table_html ~cur_user cur_page todos =
 
   let priority_changes = Session.any_task_priority_changes () in
 
-  return &
+  return @@
   table ~a:[a_class ["todo_table"]] @@
     (tr
        [th [txt "Id"]; th [txt "Description"]]) ::
@@ -504,7 +492,7 @@ let wiki_page_menu_html ~cur_user page content =
               ~service:task_side_effect_undo_complete_action
               [txt "Undo"] id]] in
 
-  return & Html_util.navbar_html ~cur_user
+  return @@ Html_util.navbar_html ~cur_user
     ~wiki_page_links:(edit_link @ [txt " "] @  printable_link)
     ~wiki_revisions_link:revisions_link
     ~top_info_bar
@@ -519,14 +507,14 @@ let view_page ~cur_user ?(revision_id=None) page_id page_name ~printable =
   if printable <> None && Option.get printable = true then
     let%lwt page_content =
       wikiml_to_html ~cur_user page_id page_name ~revision_id todos in
-    return & Html_util.html_stub ~title:page_name page_content
+    return @@ Html_util.html_stub ~title:page_name page_content
   else
     let%lwt page_content =
       (wiki_page_contents_html
          ~cur_user
          page_id page_name ~revision_id todos ())
     in
-    return & Html_util.html_stub ~title:page_name page_content
+    return @@ Html_util.html_stub ~title:page_name page_content
 
 (* Parse existing todo's from the current to-be-saved wiki page and
    update the DB relation on what todos are on the page.
@@ -601,16 +589,16 @@ let check_new_and_removed_todos ~cur_user page_id lines =
                  | None -> return ()))
        | None -> return ())  page_todos;%lwt
 
-  filter_map
+  Lwt_list.filter_map_s
     (fun e ->
        let id = int_of_string (fst e) in
        let%lwt b = Db.todo_exists id in
-       if b then return & Some id else return & None) page_todos >>=
+       if b then return @@ Some id else return @@ None) page_todos >>=
     (* Update DB "todos in pages" relation *)
     Db.update_page_todos page_id
 
 let global_substitute ?groups pat subst s =
-  Pcre.substitute_substrings ~rex:pat ~subst:(fun r -> subst r) s
+  Pcre.substitute_substrings ~rex:pat ~subst s
 
 let new_todo_re =
   Pcre.regexp ("\\[todo ("^WikiML.accepted_chars^")\\]")
@@ -684,7 +672,7 @@ let _ =
         let%lwt page_id = Db.page_id_of_page_name page_name in
         let%lwt current_page_todos = Db.query_page_todos page_id in
         let%lwt x = load_wiki_page page_id ~revision_id:None in
-        return &
+        return @@
         (page_id,
          current_page_todos,
          annotate_old_todo_items page_name current_page_todos x)
@@ -709,7 +697,7 @@ let _ =
       wiki_page_contents_html ~cur_user
          ~revision_id:None
          page_id page_name page_todos ~content:[f] () in
-    return & Html_util.html_stub ~title:("Edit " ^ page_name) h
+    return @@ Html_util.html_stub ~title:("Edit " ^ page_name) h
   in
 
   Eliom_registration.Html.register ~service:wiki_edit_page
@@ -727,7 +715,7 @@ let view_wiki_page ~cur_user (page_name, (printable, (revision_id, _))) =
       let f =
         a ~service:wiki_edit_page [txt "Create new page"] page_name in
       let%lwt h = wiki_page_menu_html ~cur_user page_name [f] in
-      return & Html_util.html_stub ~title:page_name h
+      return @@ Html_util.html_stub ~title:page_name h
 
 (* /view?p=Page *)
 let _ =

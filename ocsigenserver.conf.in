@@ -16,8 +16,9 @@
     <!-- Sqlite is needed by ocsipersist, which is used by Eliom: -->
     <extension findlib-package="sqlite3"/>
 
-    <extension findlib-package="ocsigenserver.ext.ocsipersist-sqlite"/>
+    <extension findlib-package="ocsipersist.sqlite"/>
     <extension findlib-package="eliom.server"/>
+    <extension findlib-package="netstring"/>
 
     <host defaulthostname="localhost">
       <site dir="" charset="UTF-8">
