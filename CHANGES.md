@@ -2,10 +2,14 @@ dev
 ===
 
  * Add proper titles to pages
- * Store password with salt and SHA3_512 (GitHub PR #2)
+ * Fix installation (@FardaleM, GitHub PR #1)
+ * Store password with salt and SHA3_512 (@FardaleM, GitHub PR #2)
    - Bump schema version (to 4)
- * Change session handling (GitHub PR #4)
-
+ * Simply configuration by using findlib for all packages
+   (@FardaleM, GitHub PR #3)
+ * Change session handling (@FardaleM, GitHub PR #4)
+ * Cleanup (@FardaleM, GitHub PR #5)
+ * UI improvements (@FardaleM, GitHub PR #6)
 
 1.2.4 (2020-08-23)
 ==================
