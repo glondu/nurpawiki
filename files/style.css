@@ -1,11 +1,81 @@
-body { 
-     font-family: Verdana,Geneva,Arial,Sans-serif; 
-	font-size: 12px; 
-	background-color : #FFFFFF 
+ * {
+  box-sizing: border-box;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 10px;
+  padding: 10px;
+}
+
+@media only screen and (min-width: 768px) {
+    .grid-container { grid-template-columns: 300px auto;}
+}
+
+ul.topbar {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #e7e7e7;
+  background-color: #f3f3f3;
+}
+
+ul.topbar li {
+    height: 100%;
+    display: block;
+    float: left;
+    height: 50px;
+}
+
+ul.topbar li a {
+  display: block;
+  color: #666;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  text-align: center;
+  height: 50px;
+}
+
+ul.topbar li a:hover:not(.active) {background-color: #ddd;}
+
+ul.topbar li a.active {background-color: #04AA6D;}
+
+ul.topbar li.right {float: right;}
+
+@media screen and (max-width: 768px) {
+  ul.topbar li.right,
+  ul.topbar li {
+      float: none;
+      border: 1px solid #e7e7e7;
+  }
+}
+
+.center-horizontal {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: center;
+  height: 55%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+    font-family: Verdana,Geneva,Arial,Sans-serif;
+	font-size: 12px;
+	background-color : #FFFFFF;
+    margin: 0;
 }
 
 img {
     border: 0px none;
+}
+
+.topbar img {
+    padding-right: 5px;
 }
 
 a:visited { color : #000080; ; text-decoration : underline; }
@@ -24,12 +94,6 @@ a.wiki_pri_hi  { background-color: #daa; }
 a.missing_page:visited { color : Red; text-decoration : underline; }
 a.missing_page:link    { color : Red; text-decoration : underline; }
 a.missing_page:hover   { color : Red; text-decoration : none; }
-
-/* Accesskey'd links -- first letter underlined */
-a.ak {	text-decoration: underline; }
-a.ak:hover { color:#2222FF; text-decoration: none;}
-a.ak:focus { color:#2222FF; text-decoration: none;}
-a.ak:first-letter { color:#2222FF; text-decoration: none; font-weight:bold; }
 
 a.palette0 { color:rgb(128, 6, 25); }
 a.palette1 { color:rgb(0, 104, 28); }
@@ -101,7 +165,7 @@ h1 {
 }
 
 h1.left_aligned {
-  text-align: left; 
+  text-align: left;
 }
 
 h4 {
@@ -139,7 +203,7 @@ html, body {
 
 #login_align_middle {
   position:absolute;
-  top: 35%; 
+  top: 35%;
   left: 30%;
   text-align:left;
   padding: 5px;
@@ -174,7 +238,7 @@ table.login_box {
   color:#000;
 }
 
-.undo_link { 
+.undo_link {
   color:#338;
 }
 
@@ -202,17 +266,13 @@ table.login_box {
 }
 
 #navbar {
-	width: 300px;
-	float: left;
-	margin-left: 0px;
 	margin-top: 2px;
 	padding: 12px;
+    background-color: #f1f1f1;
 }
-	
-	
+
 #content {
 	padding: 5px;
-	margin-left: 400px;
 }
 
 a#login_help_url {
